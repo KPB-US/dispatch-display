@@ -1,0 +1,31 @@
+{
+  "name": "dispatch-display",
+  "version": "1.0.0",
+  "description": "display dispatch information on screen",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KPB-US/dispatch-display.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KPB-US/dispatch-display/issues"
+  },
+  "homepage": "https://github.com/KPB-US/dispatch-display#readme",
+  "dependencies": {
+    "@google/maps": "^0.4.3",
+    "body-parser": "^1.18.1",
+    "dotenv": "^4.0.0",
+    "express": "^4.15.4",
+    "socket.io": "^2.0.3"
+  },
+  "devDependencies": {
+    "eslint": "^4.7.1",
+    "eslint-config-google": "^0.9.1",
+    "morgan": "^1.8.2"
+  }
+}

@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Call Monitor</title>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"
+      integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+      crossorigin="anonymous">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+    <script src="js/moment-precise-range.js"></script>
+    <link href="css/index.css" rel="stylesheet">
+  </head>
+  <body>
+    <div class="container hidden">
+      <div class="col-left">
+        <div class="time-details">
+          <div class="countdown"></div>
+          <div class="call">
+            <span class="time field"></span>
+            <span class="elapsed field"></span>
+          </div>
+        </div>
+
+        <div class="call-details">
+          <div class="dispatch-code field"></div>
+          <div class="call-type field"></div>
+          <div class="breathing field"></div>
+          <div class="conscious field"></div>
+        </div>
+
+        <div class="location-details">
+          <div class="location field"></div>
+          <div class="travel-time field"></div>
+          <div class="venue field"></div>
+          <div class="cross-streets field"></div>
+        </div>
+      </div>
+
+      <div class="col-right">
+        <div class="map"></div>
+        <div class="route"><ol></ol></div>
+      </div>
+    </div>
+    <div class="debug">
+      <ul class="incoming-calls"></ul>
+    </debug>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/monitor.js"></script>
+  </body>
+</html>

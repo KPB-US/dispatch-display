@@ -1,0 +1,119 @@
+/* main layout */
+
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+.container {
+  display: table;
+  width: 100%;
+}
+.hidden {
+  display: none;
+}
+.col-left {
+  vertical-align: top;
+  display: table-cell;
+  width: 35%;
+}
+.col-right {
+  position: relative;
+  vertical-align: top;
+  display: table-cell;
+  width: 65%;
+}
+
+/* time */
+
+.time-details {
+  margin-bottom: 1em;
+}
+.countdown {
+  font-size: 30em;
+  font-weight: bold;
+  line-height: .90;
+  text-align: center;
+}
+.countdown.red {
+  font-size: 24em;
+}
+.call {
+  text-align: center;
+}
+
+/* location details */
+
+.location-details {
+  margin-top: 1em;
+  text-align: center;
+  font-size: 2em;
+}
+.location {
+  font-weight: bold;
+  font-size: 2em;
+}
+.travel-time {
+  font-size: 1em;
+  color: #00005a;
+}
+.venue {
+  font-size: 2.25em;
+}
+.cross-streets {
+  font-style: italic;
+}
+
+/* call details */
+
+.call-details {
+  font-size: 2em;
+  background-color: yellow;
+  text-align: center;
+}
+.breathing, .conscious {
+  display: inline-block;
+  margin: .25em;
+  color: #660000;
+}
+.call-type {
+  font-weight: bold;
+  padding: .25em;
+}
+.dispatch-code {
+  background-color: #ddd;
+  text-align: center;
+  border-bottom: solid 1 px;
+  font-size: 4em;
+}
+
+.map {
+/*  height: 100%;
+  width: 100%;
+*/
+}
+.map img {
+  max-width: 100%;
+  max-height: 100%;
+}
+.route {
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: #333;
+  background-color: #f0f0ff;
+  border-bottom-left-radius: 1em;
+  padding: .25em;
+  opacity: .7;
+  font-size: 1.25em;
+}
+/* utility */
+
+.incoming-calls {
+  font-size: .8em;
+  color: #666;
+}
+
+.red {
+  color: #FF0000;
+}
