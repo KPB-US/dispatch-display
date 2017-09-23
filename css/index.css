@@ -3,6 +3,7 @@
 body {
   margin: 0;
   overflow: hidden;
+  background-color: #000;
 }
 
 .container {
@@ -16,12 +17,14 @@ body {
   vertical-align: top;
   display: table-cell;
   width: 35%;
+  background-color: #fff;
 }
 .col-right {
   position: relative;
   vertical-align: top;
   display: table-cell;
   width: 65%;
+  background-color: #fff;
 }
 
 /* time */
@@ -30,7 +33,8 @@ body {
   margin-bottom: 1em;
 }
 .countdown {
-  font-size: 30em;
+  /* font-family: 'Ubuntu Mono', monospace; */
+  font-size: 20em;
   font-weight: bold;
   line-height: .90;
   text-align: center;
@@ -81,6 +85,7 @@ body {
   color: #660000;
 }
 .call-type {
+  font-size: 3em;
   font-weight: bold;
   padding: .25em;
 }
@@ -92,9 +97,7 @@ body {
 }
 
 .map {
-/*  height: 100%;
-  width: 100%;
-*/
+
 }
 .map img {
   max-width: 100%;

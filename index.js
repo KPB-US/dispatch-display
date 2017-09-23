@@ -18,8 +18,8 @@ const googleMapsClient = require('@google/maps').createClient({
   Promise: Promise
 });
 const STATIC_MAP_BASE_URL =
-  'https://maps.googleapis.com/maps/api/staticmap?&maptype=roadmap&zoom=14&scale=2&key=' +
-  process.env.GOOGLE_STATIC_MAPS_API_KEY;
+  'https://maps.googleapis.com/maps/api/staticmap?&maptype=roadmap&scale=2&key=' +
+  process.env.GOOGLE_STATIC_MAPS_API_KEY; // &zoom=14
 
 let testCache = {
   location: null,

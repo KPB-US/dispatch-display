@@ -1,7 +1,7 @@
 /* eslint-env jquery */
 /* globals moment, io */
 
-const OUT_SECS = 90;
+const OUT_SECS = 60 * 10; // when call should go away
 const socket = io();
 let countdownHandle = null;
 let currentCallNumber = '';
@@ -64,23 +64,25 @@ socket.on('call', function(msg) {
     }
     reset();
 
-    let countdownStart = Date.now();
+    let countdownStart = moment();
     // display when the call came in to 911 operator
     let callTime = moment(data.callDateTime, 'MM/DD/YYYY HH:mm:ss');
     $('.call .time').text('Call came in at ' + callTime.format('h:mm a'));
     $('.call .elapsed').text(moment.preciseDiff(callTime, moment()) + ' ago');
-    // display the initial countdown value
-    $('.countdown').text(OUT_SECS);
+    $('.countdown').text('00');
     countdownHandle = setInterval(function() {
-      const elapsed = Math.floor((Date.now() - countdownStart) / 1000);
-      $('.countdown').text(OUT_SECS - elapsed);
-      $('.call .elapsed').text(moment.preciseDiff(callTime, moment()) + ' ago');
-      if (elapsed >= OUT_SECS) {
-        $('.countdown').addClass('red');
+      const elapsed = Math.floor((moment() - countdownStart) / 1000);
+      const mins = Math.floor(elapsed / 60);
+      const secs = ('00' + Math.floor(elapsed - mins * 60).toString()).slice(-2);
+      if (mins == 0) {
+        $('.countdown').text(secs);
+      } else {
+        $('.countdown').text(mins.toString() + ':' + secs);
       }
+      $('.call .elapsed').text(moment.preciseDiff(callTime, moment()) + ' ago');
 
-      // if we timed out past twice our response time, then reset and hide
-      if (elapsed >= OUT_SECS * 2) {
+      // if we reached OUT_SECS, then reset and hide
+      if (elapsed >= OUT_SECS) {
         $('.container').addClass('hidden');
         clearInterval(countdownHandle);
         countdownHandle = null;
