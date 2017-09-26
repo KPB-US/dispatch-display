@@ -4,10 +4,13 @@ body {
   margin: 0;
   overflow: hidden;
   background-color: #000;
+  font-family: 'Oswald', sans-serif;
 }
 
 .container {
   display: table;
+  table-layout: fixed;
+  word-wrap: break-word;
   width: 100%;
 }
 .hidden {
@@ -16,7 +19,7 @@ body {
 .col-left {
   vertical-align: top;
   display: table-cell;
-  width: 35%;
+  width: 40%;
   background-color: #fff;
 }
 .col-right {
@@ -30,11 +33,9 @@ body {
 /* time */
 
 .time-details {
-  margin-bottom: 1em;
 }
 .countdown {
-  /* font-family: 'Ubuntu Mono', monospace; */
-  font-size: 20em;
+  font-size: 19vw;
   font-weight: bold;
   line-height: .90;
   text-align: center;
@@ -45,59 +46,77 @@ body {
 .call {
   text-align: center;
   font-size: 1.5em;
+  margin-top: 1vh;
+  margin-bottom: 1vh;
 }
 .elapsed {
-
+  display: block;
 }
 
 /* location details */
 
 .location-details {
-  margin-top: 1em;
+  margin-top: 1vh;
   text-align: center;
-  font-size: 2em;
 }
 .location {
   font-weight: bold;
-  font-size: 2em;
+  font-size: 3vw;
 }
 .travel-time {
-  font-size: 1em;
-  color: #00005a;
+  font-size: 2vw;
+  color: #00007a;
 }
 .venue {
-  font-size: 2.25em;
+  font-size: 3vw;
 }
 .cross-streets {
   font-style: italic;
+  font-size: 2vw;
 }
 
 /* call details */
 
 .call-details {
-  font-size: 2em;
   background-color: yellow;
   text-align: center;
+  padding: 1vh;
+  font-size: 2vw;
 }
 .breathing, .conscious {
   display: inline-block;
-  margin: .25em;
+  margin: 1vh;
   color: #660000;
 }
 .call-type {
-  font-size: 3em;
+  font-size: 4vw;
   font-weight: bold;
-  padding: .25em;
+  padding: 1vh;
+  word-wrap: break-word;
+  line-height: .98;
 }
 .dispatch-code {
-  background-color: #ddd;
   text-align: center;
-  border-bottom: solid 1 px;
-  font-size: 4em;
+  font-size: 14vw;
+  line-height: 16vw;
+  height: 16vw;
+  width: 16vw;
+  border-radius: 16vw;
+  padding: 0;
+  font-weight: bold;
+  opacity: .4;
+  position: absolute;
+  top: 1vw;
+  left: 1vw;
+  z-index: 55;
+  color: white;
+//  background-color: #d46a6a;
+  background-color: #ffaaaa;
 }
 
-.map {
+/* map */
 
+.map {
 }
 .map img {
   max-width: 100%;
@@ -112,7 +131,7 @@ body {
   border-bottom-left-radius: 1em;
   padding: .25em;
   opacity: .7;
-  font-size: 1.25em;
+  font-size: 1vw;
 }
 /* utility */
 
