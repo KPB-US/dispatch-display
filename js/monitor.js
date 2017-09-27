@@ -40,7 +40,6 @@
     // display route travel directions
     if ($('.route ol').length != 0) {
       // clear them if they already have something
-      console.log('clearing route');
       $('.route').empty();
       $('.route').append($('<ol>'));
     }

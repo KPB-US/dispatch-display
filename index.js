@@ -14,11 +14,14 @@ const app = express();
 const http = require('http').Server(app); /* eslint new-cap: off */
 const io = require('socket.io')(http);
 const bodyParser = require('body-parser');
+
 const googleMapsClient = require('@google/maps').createClient({
   key: process.env.GOOGLE_DIRECTIONS_API_KEY,
   Promise: Promise,
 });
 const rollbar = new Rollbar(process.env.ROLLBAR_TOKEN);
+
+const TTL = 60 * 10; // call is considered active at the station for this long
 
 const STATIC_MAP_BASE_URL =
   'https://maps.googleapis.com/maps/api/staticmap?&maptype=roadmap&scale=2&key=' +
@@ -26,11 +29,16 @@ const STATIC_MAP_BASE_URL =
 
 const STATIONS = [
   {id: 'APFESA', lat: 59.7796476, lng: -151.8342569, ip_match_regex: /10\.0\.3\.158/},
-  {id: 'BCFSA',  lat: 60.1693453, lng: -149.4019433, ip_match_regex: /::1/},
-  {id: 'CES',    lat: 60.4829661, lng: -151.0722942, ip_match_regex: /10\.0\.3\.*/},
+  // {id: 'BCFSA',  lat: 60.1693453, lng: -149.4019433, ip_match_regex: /::1/},
+  // {id: 'CES',    lat: 60.4829661, lng: -151.0722942, ip_match_regex: /10\.0\.3\.*/},
+  {id: 'CES',    lat: 60.4829661, lng: -151.0722942, ip_match_regex: /.*/},
   {id: 'MES',    lat: 60.4829661, lng: -151.0722942, ip_match_regex: /::1/},
   {id: 'BES',    lat: 60.4829661, lng: -151.0722942, ip_match_regex: /10\.0\.3\.167/},
 ];
+
+// keep track of inbound calls so we dont duplicate them across displays
+const callHistory = [];
+const CALL_HISTORY_LIMIT = process.env.CALL_HISTORY_LIMIT || 20;
 
 /**
  * returns station matching id
@@ -39,14 +47,7 @@ const STATIONS = [
  * @return {object} STATION entry or null if not found
  */
 function findStation(id) {
-  let station = null;
-  for (let i = 0; i < STATIONS.length; i++) {
-    if (STATIONS[i].id === id) {
-      station = STATIONS[i];
-      break;
-    }
-  }
-  return station;
+  return STATIONS.find((entry) => entry.id == id);
 }
 
 /**
@@ -56,14 +57,7 @@ function findStation(id) {
  * @return {object} STATION entry or null if not found
  */
 function findStationBasedOnIpMatch(ip) {
-  let station = null;
-  for (let i = 0; i < STATIONS.length; i++) {
-    if (ip.match(STATIONS[i].ip_match_regex) != null) {
-      station = STATIONS[i];
-      break;
-    }
-  }
-  return station;
+  return STATIONS.find((entry) => ip.match(entry.ip_match_regex) != null);
 }
 
 /**
@@ -151,7 +145,7 @@ app.get('/', function(req, res) {
  */
 io.on('connection', function(socket) {
   console.log('a user connected', socket.conn.remoteAddress);
-  // todo! determine what station they are and if it is a valid connection
+  // determine what station they are and if it is a valid connection
   let station = findStationBasedOnIpMatch(socket.conn.remoteAddress);
   if (station == null) {
     console.log('  that remoteAddress is not registered in the STATIONS list');
@@ -162,6 +156,21 @@ io.on('connection', function(socket) {
   // keep track of the station and the socket so we can send to them
   console.log('  Welcome ' + station.id);
   directory[socket.conn.remoteAddress.toString()] = {station, socket, posts: []};
+  // if we have an active entry for them, go ahead and send it
+  for (let i = callHistory.length - 1; i >= 0; i--) {
+    if (callHistory[i].callData.station == station.id) {
+      let age = ((new Date() - new Date(callHistory[i].receivedDate)) / 1000);
+      console.log('age from ', callHistory[i].receivedDate, age, TTL);
+      if (age < TTL) {
+        console.log('sending');
+        sendToStation('call', callHistory[i].callData, socket.conn.remoteAddress.toString());
+        if (callHistory[i].directionsData) {
+          sendToStation('directions', callHistory[i].directionsData, socket.conn.remoteAddress.toString());
+        }
+        break;
+      }
+    }
+  }
 
   socket.on('disconnect', function(reason) {
      console.log('user disconnected', socket.conn.remoteAddress, reason);
@@ -174,29 +183,34 @@ io.on('connection', function(socket) {
  *
  * @param {string} type name of event
  * @param {object} data data to send
+ * @param {string} ip if specified, only this ip gets it
  */
-function sendToStation(type, data) {
+function sendToStation(type, data, ip) {
   // send the call data to the station it should go to
-  const station = findStation(data.station);
   const directoryKeys = Object.getOwnPropertyNames(directory);
   for (let i = 0; i < directoryKeys.length; i++) {
-    const connectedStation = directory[directoryKeys[i]].station;
-    if (connectedStation.id === data.station) {
+    const entry = directory[directoryKeys[i]];
+    if (entry.station.id === data.station && (!ip || ip === directoryKeys[i])) {
       console.log('sending ' + type + ' to ' + data.station + ' at ' +
-        directory[directoryKeys[i]].socket.conn.remoteAddress);
-      let post = {
-        type,
-        data,
-        sent: Date(),
-      };
-      directory[directoryKeys[i]].posts.push(post);
-      directory[directoryKeys[i]].socket.emit(type, data, () => {
+        entry.socket.conn.remoteAddress);
+      let post = entry.posts.find((item) => {
+        return item.callNumber == data.callNumber;
+      });
+      if (post == null) {
+        post = {
+          type,
+          callNumber: data.callNumber,
+        };
+        entry.posts.push(post);
+      }
+      post[type + '_sent'] = Date();
+      entry.socket.emit(type, data, () => {
         // get an ack back on the send, see https://socket.io/docs/#sending-and-getting-data-(acknowledgements)
-        console.log('  the ' + type + ' was acknowledged by station ' + data.station);
-        post.ack = true;
+        console.log('  the ' + type + ' was acknowledged by station ' + data.station + ' at ' + entry.socket.remoteAddress);
+        post[type + '_ack'] = Date();
       });
     } else {
-      console.log('  not sending to ' + connectedStation.id);
+      console.log('  not sending to ' + entry.station.id + ' at ' + entry.socket.remoteAddress);
     }
   }
 }
@@ -213,11 +227,29 @@ app.post('/incoming', function(req, res) {
     return;
   }
 
+  const station = findStation(data.station);
+  if (station == null) {
+    console.log('Not handling calls for that station', req.body);
+    res.status(404).send('Not handling calls for that station.');
+    return;
+  }
+
   // send the data to the appropriate displays/stations
   sendToStation('call', data);
+  let call = callHistory.find((entry) => entry.callNumber == data.callNumber);
+  if (call == null) {
+    call = {
+      callNumber: data.callNumber,
+      callData: data,
+      receivedDate: Date(),
+    };
+    if (callHistory.length > CALL_HISTORY_LIMIT) {
+      callHistory.shift();
+    }
+    callHistory.push(call);
+  }
 
   // if we have a location to map...
-  const station = findStation(data.station);
   if (data.location) {
     // if we have already successfully mapped it, then send the cached data
     if (testCache.location != null && testCache.location === data.location) {
@@ -251,6 +283,7 @@ app.post('/incoming', function(req, res) {
               data: directions,
             };
             sendToStation('directions', directions);
+            call.directionsData = directions;
           }
         })
         .catch((err) => {
@@ -263,16 +296,23 @@ app.post('/incoming', function(req, res) {
   res.send('OK');
 });
 
-app.get('/status', function (req, res) {
+app.get('/status', function(req, res) {
   let body = '';
-  const directoryKeys = Object.getOwnPropertyNames(directory);
+  const directoryKeys = Object.getOwnPropertyNames(directory)
+    .sort((a, b) => directory[a].station.id.localeCompare(directory[b].station.id));
   for (let i = 0; i < directoryKeys.length; i++) {
-    body += '<h1>' + directory[directoryKeys[i]].station.id + directory[directoryKeys[i]].posts.length + '</h1>';
-    for (let j = 0; j < directory[directoryKeys[i]].posts.length; j++) {
-      console.log(directory[directoryKeys[i]].posts[j]);
-      body += '<p>' + directory[directoryKeys[i]].posts[j].data.callNumber +
-        ' sent ' + directory[directoryKeys[i]].posts[j].sent + ' ' +
-        (directory[directoryKeys[i]].posts[j].data.ack ? 'acknowledged' : 'not acknowledged') + '</p>';
+    const entry = directory[directoryKeys[i]];
+    body += '<h1>' + entry.station.id + entry.posts.length + '</h1>';
+    for (let j = 0; j < entry.posts.length; j++) {
+      // console.log(entry.posts[j]);
+      const call = callHistory.find((call) => call.callNumber == entry.posts[j].callNumber);
+      body += '<p>' + entry.posts[j].callNumber + ' ' + call.callData.callType +
+        ' sent at ' + entry.posts[j].call_sent + ' ' +
+        (entry.posts[j].call_ack ? 'acknowledged' : 'not acknowledged') +
+
+        ' directions sent at ' + entry.posts[j].call_sent + ' ' +
+        (entry.posts[j].directions_ack ? 'acknowledged' : 'not acknowledged') +
+         '</p>';
     }
   }
   res.send(body);
