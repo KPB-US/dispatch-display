@@ -139,4 +139,16 @@
     $('.countdown').removeClass('red');
     $('.container').removeClass('hidden');
   }
+
+  /**
+   * display status
+   */
+  function statusUpdate() {
+    fetch('/status')
+      .then((results) => results.json())
+      .then((results) => {
+        console.log(results);
+      });
+  }
+  // statusUpdate();
 })();

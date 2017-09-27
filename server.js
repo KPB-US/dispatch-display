@@ -130,12 +130,13 @@ app.use(bodyParser.json()); // https://stackoverflow.com/questions/5710358/how-t
 
 // serve static files
 app.use('/socket.io', express.static('node_modules/socket.io-client/dist'));
-app.use('/js', express.static('js'));
-app.use('/css', express.static('css'));
+app.use(express.static('js'));
+app.use(express.static('css'));
+app.use(express.static('static'));
 
 // send the main page
 app.get('/', function(req, res) {
-  res.sendFile(__dirname + '/index.html');
+  res.sendFile(__dirname + '/static/index.html');
 });
 
 /**
@@ -206,11 +207,12 @@ function sendToStation(type, data, ip) {
       post[type + '_sent'] = Date();
       entry.socket.emit(type, data, () => {
         // get an ack back on the send, see https://socket.io/docs/#sending-and-getting-data-(acknowledgements)
-        console.log('  the ' + type + ' was acknowledged by station ' + data.station + ' at ' + entry.socket.remoteAddress);
+        console.log('  the ' + type + ' was acknowledged by station ' +
+          data.station + ' at ' + entry.socket.conn.remoteAddress);
         post[type + '_ack'] = Date();
       });
     } else {
-      console.log('  not sending to ' + entry.station.id + ' at ' + entry.socket.remoteAddress);
+      console.log('  not sending to ' + entry.station.id + ' at ' + entry.socket.conn.remoteAddress);
     }
   }
 }
@@ -250,6 +252,7 @@ app.post('/incoming', function(req, res) {
   }
 
   // if we have a location to map...
+  // TODO! change diretions caching from last only to an array of up to the call history limit or use the call history?
   if (data.location) {
     // if we have already successfully mapped it, then send the cached data
     if (testCache.location != null && testCache.location === data.location) {
@@ -297,25 +300,32 @@ app.post('/incoming', function(req, res) {
 });
 
 app.get('/status', function(req, res) {
-  let body = '';
+  // let body = '';
   const directoryKeys = Object.getOwnPropertyNames(directory)
     .sort((a, b) => directory[a].station.id.localeCompare(directory[b].station.id));
-  for (let i = 0; i < directoryKeys.length; i++) {
-    const entry = directory[directoryKeys[i]];
-    body += '<h1>' + entry.station.id + entry.posts.length + '</h1>';
-    for (let j = 0; j < entry.posts.length; j++) {
-      // console.log(entry.posts[j]);
-      const call = callHistory.find((call) => call.callNumber == entry.posts[j].callNumber);
-      body += '<p>' + entry.posts[j].callNumber + ' ' + call.callData.callType +
-        ' sent at ' + entry.posts[j].call_sent + ' ' +
-        (entry.posts[j].call_ack ? 'acknowledged' : 'not acknowledged') +
-
-        ' directions sent at ' + entry.posts[j].call_sent + ' ' +
-        (entry.posts[j].directions_ack ? 'acknowledged' : 'not acknowledged') +
-         '</p>';
-    }
-  }
-  res.send(body);
+  // for (let i = 0; i < directoryKeys.length; i++) {
+  //   const entry = directory[directoryKeys[i]];
+  //   body += '<h1>' + entry.station.id + entry.posts.length + '</h1>';
+  //   for (let j = 0; j < entry.posts.length; j++) {
+  //     // console.log(entry.posts[j]);
+  //     const call = callHistory.find((call) => call.callNumber == entry.posts[j].callNumber);
+  //     body += '<p>' + entry.posts[j].callNumber + ' ' + call.callData.callType +
+  //       ' sent at ' + entry.posts[j].call_sent + ' ' +
+  //       (entry.posts[j].call_ack ? 'acknowledged' : 'not acknowledged') +
+  //
+  //       ' directions sent at ' + entry.posts[j].call_sent + ' ' +
+  //       (entry.posts[j].directions_ack ? 'acknowledged' : 'not acknowledged') +
+  //        '</p>';
+  //   }
+  // }
+  // res.send(body);
+  res.json({
+    directory: directoryKeys.map((id) => ({
+      id: directory[id].station.id,
+      posts: directory[id].posts,
+    })),
+    callHistory,
+  });
 });
 
 http.listen(3000, function() {
