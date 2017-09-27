@@ -7,6 +7,7 @@
 
 require('dotenv').config();
 
+const Rollbar = require('rollbar');
 const express = require('express');
 const morgan = require('morgan'); /* eslint no-unused-vars: off */
 const app = express();
@@ -17,6 +18,8 @@ const googleMapsClient = require('@google/maps').createClient({
   key: process.env.GOOGLE_DIRECTIONS_API_KEY,
   Promise: Promise,
 });
+const rollbar = new Rollbar(process.env.ROLLBAR_TOKEN);
+
 const STATIC_MAP_BASE_URL =
   'https://maps.googleapis.com/maps/api/staticmap?&maptype=roadmap&scale=2&key=' +
   process.env.GOOGLE_STATIC_MAPS_API_KEY; // &zoom=14
@@ -154,11 +157,11 @@ io.on('connection', function(socket) {
     console.log('  that remoteAddress is not registered in the STATIONS list');
     socket.disconnect(true);
     return;
-  } else {
-    console.log('  Welcome ' + station.id);
   }
+
   // keep track of the station and the socket so we can send to them
-  directory[socket.conn.remoteAddress.toString()] = {station, socket};
+  console.log('  Welcome ' + station.id);
+  directory[socket.conn.remoteAddress.toString()] = {station, socket, posts: []};
 
   socket.on('disconnect', function(reason) {
      console.log('user disconnected', socket.conn.remoteAddress, reason);
@@ -166,6 +169,37 @@ io.on('connection', function(socket) {
    });
  });
 
+/**
+ * send data to the appropriate, connected stations
+ *
+ * @param {string} type name of event
+ * @param {object} data data to send
+ */
+function sendToStation(type, data) {
+  // send the call data to the station it should go to
+  const station = findStation(data.station);
+  const directoryKeys = Object.getOwnPropertyNames(directory);
+  for (let i = 0; i < directoryKeys.length; i++) {
+    const connectedStation = directory[directoryKeys[i]].station;
+    if (connectedStation.id === data.station) {
+      console.log('sending ' + type + ' to ' + data.station + ' at ' +
+        directory[directoryKeys[i]].socket.conn.remoteAddress);
+      let post = {
+        type,
+        data,
+        sent: Date(),
+      };
+      directory[directoryKeys[i]].posts.push(post);
+      directory[directoryKeys[i]].socket.emit(type, data, () => {
+        // get an ack back on the send, see https://socket.io/docs/#sending-and-getting-data-(acknowledgements)
+        console.log('  the ' + type + ' was acknowledged by station ' + data.station);
+        post.ack = true;
+      });
+    } else {
+      console.log('  not sending to ' + connectedStation.id);
+    }
+  }
+}
 
 /**
  * handle incoming data from 911 system
@@ -179,37 +213,18 @@ app.post('/incoming', function(req, res) {
     return;
   }
 
-  // broadcast the call data to the station it should go to
-  const directoryKeys = Object.getOwnPropertyNames(directory);
-  for (let i = 0; i < directoryKeys.length; i++) {
-    const station = directory[directoryKeys[i]].station;
-    if (station.id === data.station) {
-      console.log('sending call to ' + data.station + ' at ' + directory[directoryKeys[i]].socket.conn.remoteAddress);
-      directory[directoryKeys[i]].last_sent = Date();
-      directory[directoryKeys[i]].socket.emit('call', data, () => {
-        // get an ack back on the send, see https://socket.io/docs/#sending-and-getting-data-(acknowledgements)
-        console.log('  the call was acknowledged by station ' + data.station);
-        directory[directoryKeys[i]].ack = true;
-        directory[directoryKeys[i]].ack_time = Date();
-      });
-    } else {
-      console.log('  not sending to ' + station.id);
-    }
-  }
+  // send the data to the appropriate displays/stations
+  sendToStation('call', data);
 
-  // data first
-  // io.emit('call', {
-  //   callNumber,
-  //   response: req.body,
-  // });
-
-  // directions/map next
+  // if we have a location to map...
   const station = findStation(data.station);
   if (data.location) {
+    // if we have already successfully mapped it, then send the cached data
     if (testCache.location != null && testCache.location === data.location) {
       testCache.data.callNumber = data.callNumber;
-      io.emit('directions', testCache.data);
+      sendToStation('directions', testCache.data);
     } else {
+      // otherwise, query google for the directions and map and send it and cache it
       googleMapsClient.directions({
         origin: [station.lat, station.lng],
         destination: (data.location.match(/[A-Z]/) == null ?
@@ -227,6 +242,7 @@ app.post('/incoming', function(req, res) {
             const enc = encodeURIComponent(response.json.routes[0].overview_polyline.points);
             const directions = {
               callNumber: data.callNumber,
+              station: data.station,
               response,
               mapUrl: STATIC_MAP_BASE_URL + '&path=enc:' + enc + markers,
             };
@@ -234,13 +250,12 @@ app.post('/incoming', function(req, res) {
               location: data.location,
               data: directions,
             };
-            console.log('sending directions info');
-            io.emit('directions', directions);
+            sendToStation('directions', directions);
           }
         })
         .catch((err) => {
-          // use rollbar or newrelic to track errors
           console.log(err);
+          rollbar.log(err);
         });
     }
   }
@@ -248,6 +263,20 @@ app.post('/incoming', function(req, res) {
   res.send('OK');
 });
 
+app.get('/status', function (req, res) {
+  let body = '';
+  const directoryKeys = Object.getOwnPropertyNames(directory);
+  for (let i = 0; i < directoryKeys.length; i++) {
+    body += '<h1>' + directory[directoryKeys[i]].station.id + directory[directoryKeys[i]].posts.length + '</h1>';
+    for (let j = 0; j < directory[directoryKeys[i]].posts.length; j++) {
+      console.log(directory[directoryKeys[i]].posts[j]);
+      body += '<p>' + directory[directoryKeys[i]].posts[j].data.callNumber +
+        ' sent ' + directory[directoryKeys[i]].posts[j].sent + ' ' +
+        (directory[directoryKeys[i]].posts[j].data.ack ? 'acknowledged' : 'not acknowledged') + '</p>';
+    }
+  }
+  res.send(body);
+});
 
 http.listen(3000, function() {
   console.log('listening on *:3000');

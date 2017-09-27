@@ -17,7 +17,9 @@
    * @param {object} response google directions api results
    * @param {string} mapUrl google static map url with route highlighted
    */
-  socket.on('directions', function(msg) {
+  socket.on('directions', function(msg, ackHandler) {
+    if (ackHandler) ackHandler(true);
+
     const callNumber = msg.callNumber;
     const data = msg.response;
     const mapUrl = msg.mapUrl + '&size=';
@@ -28,10 +30,6 @@
       return;
     }
 
-    // size the map to the container and have the browser fetch it
-    const m = $('.map');
-    m.append($('<img src="' + mapUrl + m[0].parentElement.offsetWidth + 'x' + m[0].parentElement.offsetHeight + '"/>'));
-
     // display estimated travel time
     if (data.json.routes.length > 0 &&
       data.json.routes[0].legs.length > 0 &&
@@ -40,11 +38,22 @@
     }
 
     // display route travel directions
+    if ($('.route ol').length != 0) {
+      // clear them if they already have something
+      console.log('clearing route');
+      $('.route').empty();
+      $('.route').append($('<ol>'));
+    }
     for (let i = 0; i < data.json.routes[0].legs[0].steps.length; i++) {
       $('.route ol').append($('<li>')
         .html(data.json.routes[0].legs[0].steps[i].html_instructions +
            ' (' + data.json.routes[0].legs[0].steps[i].distance.text + ')'));
     }
+
+    // size the map to the container and have the browser fetch it
+    const m = $('.map');
+    m.empty();
+    m.append($('<img src="' + mapUrl + m[0].parentElement.offsetWidth + 'x' + m[0].parentElement.offsetHeight + '"/>'));
   });
 
   /**
