@@ -11,6 +11,6 @@ Uses the following environment variables:
 
 1. Git clone the repo
 1. run `npm install`
-1. run `node index.js`
+1. run `node server.js`
 1. Point your display's browser to http://localhost:3000
 1. Use postman to post to http://localhost:3000/incoming
