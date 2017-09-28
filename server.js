@@ -211,8 +211,6 @@ function sendToStation(type, data, ip) {
           data.station + ' at ' + entry.socket.conn.remoteAddress);
         post[type + '_ack'] = Date();
       });
-    } else {
-      console.log('  not sending to ' + entry.station.id + ' at ' + entry.socket.conn.remoteAddress);
     }
   }
 }

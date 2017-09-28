@@ -1,13 +1,16 @@
 /* eslint-env jquery */
-/* globals moment, io */
+/* globals moment, io, document */
 
 (function() {
-    'use strict';
+  'use strict';
 
-  const OUT_SECS = 60 * 10; // when call should go away
+  const OUT_SECS = 60 * 2; // when call should go away
   const socket = io();
+
+  const calls = []; // keep track of currently active calls
+
   let countdownHandle = null;
-  let currentCallNumber = '';
+  // let currentCallNumber = '';
 
   /**
    * handle directions, display route and map
@@ -17,7 +20,7 @@
    * @param {object} response google directions api results
    * @param {string} mapUrl google static map url with route highlighted
    */
-  socket.on('directions', function(msg, ackHandler) {
+  socket.on('xdirections', function(msg, ackHandler) {
     if (ackHandler) ackHandler(true);
 
     const callNumber = msg.callNumber;
@@ -63,82 +66,96 @@
    * @param {object} response call data from 911
    */
   socket.on('call', function(data, ackHandler) {
-    // $('.incoming-calls').append($('<li>').append($('<pre>').text(JSON.stringify(msg, undefined, 2))));
+    // acknowledge that we received the data
     if (ackHandler) ackHandler(true);
 
+    // if this is a new call then add it to our active calls list
     const callNumber = data.callNumber;
+    let callEl = document.querySelector("[data-call-number='" + callNumber + "']"); /* eslint quotes:off */
+    let call = calls.find((entry) => entry.data.callNumber == callNumber);
+    if (call == null) {
+      // duplicate the template and add the call info to the dom
+      callEl = document.getElementsByClassName('template')[0].cloneNode(true);
+      callEl.classList.remove('template');
+      callEl.classList.remove('hidden');
+      callEl.dataset.callNumber = callNumber;
 
-    // if this is a new call, reset the timer and on-screen details
-    if (currentCallNumber != callNumber) {
-      currentCallNumber = callNumber;
-      if (countdownHandle != null) {
-        clearInterval(countdownHandle);
-      }
-      reset();
+      // add to the active calls,
+      call = {
+        data,
+        countdownStart: moment(),
+      };
+      calls.push(call);
 
-      let countdownStart = moment();
       // display when the call came in to 911 operator
       let callTime = moment(data.callDateTime, 'MM/DD/YYYY HH:mm:ss');
-      $('.call .time').text('Call came in at ' + callTime.format('h:mm a'));
-      $('.call .elapsed').text(moment.preciseDiff(callTime, moment()) + ' ago');
-      $('.countdown').text('00');
-      countdownHandle = setInterval(function() {
-        const elapsed = Math.floor((moment() - countdownStart) / 1000);
+      $(callEl).find('.call .time').text('Call came in at ' + callTime.format('h:mm a'));
+      $(callEl).find('.call .elapsed').text(moment.preciseDiff(callTime, moment()) + ' ago');
+      $(callEl).find('.countdown').text('00');
+
+      call.countdownHandle = setInterval(function() {
+        let callEl = document.querySelector("[data-call-number='" + callNumber + "']"); /* eslint quotes:off */
+        const elapsed = Math.floor((moment() - call.countdownStart) / 1000);
         const mins = Math.floor(elapsed / 60);
         const secs = ('00' + Math.floor(elapsed - mins * 60).toString()).slice(-2);
         if (mins == 0) {
-          $('.countdown').text(secs);
+          $(callEl).find('.countdown').text(secs);
         } else {
-          $('.countdown').text(mins.toString() + ':' + secs);
+          $(callEl).find('.countdown').text(mins.toString() + ':' + secs);
         }
-        $('.call .elapsed').text(moment.preciseDiff(callTime, moment()) + ' ago');
+        $(callEl).find('.call .elapsed').text(moment.preciseDiff(callTime, moment()) + ' ago');
 
-        // if we reached OUT_SECS, then reset and hide
+        // if we reached OUT_SECS, then reset and hide and remove from active calls
         if (elapsed >= OUT_SECS) {
-          $('.container').addClass('hidden');
-          clearInterval(countdownHandle);
-          countdownHandle = null;
-          currentCallNumber = '';
+          clearInterval(call.countdownHandle);
+          call.countdownHandle = null;
+          callEl.parentElement.removeChild(callEl);
+          calls.splice(calls.indexOf(call), 1);
         }
       }, 1000);
+
+      document.body.appendChild(callEl);
+    } else {
+      // we found it, so maybe we are getting updated info
+      call.data = data;
     }
 
     if (data.callType) {
-      $('.call-type').text(data.callType);
+      $(callEl).find('.call-type').text(data.callType);
     }
     if (data.dispatchCode) {
-      $('.dispatch-code').text(data.dispatchCode);
+      $(callEl).find('.dispatch-code').text(data.dispatchCode);
     }
 
     if (data.breathing) {
-      $('.breathing').text('BREATHING: ' + data.breathing);
+      $(callEl).find('.breathing').text('BREATHING: ' + data.breathing);
     }
     if (data.conscious) {
-      $('.conscious').text('CONSCIOUS: ' + data.conscious);
+      $(callEl).find('.conscious').text('CONSCIOUS: ' + data.conscious);
     }
 
     if (data.location) {
-      $('.location').text(data.location);
+      $(callEl).find('.location').text(data.location);
     }
     if (data.venue) {
-      $('.venue').text(data.venue);
+      $(callEl).find('.venue').text(data.venue);
     }
     if (data.crossStreets) {
-      $('.cross-streets').text(data.crossStreets);
+      $(callEl).find('.cross-streets').text(data.crossStreets);
     }
   });
 
   /**
    * clear the screen contents of call data, and unhide the container
    */
-  function reset() {
-    $('.field').text('');
-    $('.route').empty();
-    $('.route').append($('<ol>'));
-    $('.map').empty();
-    $('.countdown').removeClass('red');
-    $('.container').removeClass('hidden');
-  }
+  // function reset() {
+  //   $('.field').text('');
+  //   $('.route').empty();
+  //   $('.route').append($('<ol>'));
+  //   $('.map').empty();
+  //   $('.countdown').removeClass('red');
+  //   $('.container').removeClass('hidden');
+  // }
 
   /**
    * display status
