@@ -7,14 +7,35 @@ body {
   font-family: 'Oswald', sans-serif;
 }
 
+.calls {
+
+}
+
 .container {
+  position: absolute;
+  transition: left 1s, opacity 1s;
+  left: 0;
+  opacity: 1;
   display: table;
   table-layout: fixed;
   word-wrap: break-word;
   width: 100%;
 }
+.container.hidden {
+  left: -1000vw;
+  opacity: 0;
+}
 .hidden {
-  display: none;
+  //opacity: 0;
+  //left: -1000vw;
+}
+.stage-right {
+  left: 1000vw;
+  opacity: 0;
+}
+.stage-left {
+  left: -1000vw;
+  opacity: 0;
 }
 .col-left {
   vertical-align: top;
@@ -132,14 +153,4 @@ body {
   padding: .25em;
   opacity: .7;
   font-size: 1vw;
-}
-/* utility */
-
-.incoming-calls {
-  font-size: .8em;
-  color: #666;
-}
-
-.red {
-  color: #FF0000;
 }

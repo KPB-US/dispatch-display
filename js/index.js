@@ -1,16 +1,92 @@
-/* eslint-env jquery */
-/* globals moment, io, document */
+/* eslint-env browser, jquery */
+/* globals moment, io */
 
 (function() {
   'use strict';
 
-  const OUT_SECS = 60 * 2; // when call should go away
+  const CALL_ACTIVE_SECS = 60 * 10; // time the call is active after which it should disappear
+  const SWITCH_AFTER_SECS = 4; // how quickly we should switch between active calls
   const socket = io();
-
   const calls = []; // keep track of currently active calls
 
-  let countdownHandle = null;
-  // let currentCallNumber = '';
+  // set up a timer that will iterate through displaying the call
+  setInterval(function() {
+    let urgentCall = calls.find((entry) => entry.visibleAt == -1);
+    if (urgentCall) {
+      // hide the other call containers and set their activeAt time to 0
+      $('.container').addClass('hidden');
+      for (let i = 0; i < calls.length; i++) {
+        calls[i].visibleAt = null;
+      }
+      urgentCall.visibleAt = moment();
+      const callEl = document.querySelector("[data-call-number='" +
+        urgentCall.data.callNumber + "']"); /* eslint quotes:off */
+      callEl.classList.remove('hidden');
+      if (!urgentCall.mapDisplayed && urgentCall.mapUrl) {
+        displayMap(urgentCall);
+      }
+      return;
+    }
+
+    // purge expired entries
+    for (let i = calls.length - 1; i >= 0; i--) {
+      if (calls[i].state && calls[i].state == 'EXPIRED') {
+        clearInterval(calls[i].countdownHandle);
+        calls[i].countdownHandle = null;
+        const callEl = document.querySelector("[data-call-number='" +
+          calls[i].data.callNumber + "']"); /* eslint quotes:off */
+        callEl.parentElement.removeChild(callEl);
+        calls.splice(i, 1);
+      }
+    }
+
+    let currentCall = calls.find((entry) => entry.visibleAt != null);
+    let nextCall = null;
+    if (currentCall == undefined) {
+      // there is no call currently visible
+      if (calls.length > 0) {
+        nextCall = calls[0];
+      }
+    } else {
+      // display the map if we haven't yet
+      if (!currentCall.mapDisplayed && currentCall.mapUrl) {
+        displayMap(currentCall);
+      }
+
+      // see if the current call has been shown long enough
+      if (moment().diff(currentCall.visibleAt) / 1000 > SWITCH_AFTER_SECS) {
+        let i = calls.indexOf(currentCall);
+        if (i < calls.length - 1) {
+          nextCall = calls[i + 1];
+        } else if (calls.length > 1) {
+          // greater than one since one of them is the one that is current, wrap around
+          nextCall = calls[0];
+        } else {
+          // the current call is the only call
+          nextCall = currentCall;
+        }
+      }
+    }
+
+    if (nextCall == currentCall) {
+      return;
+    }
+
+    // go to the next call if there is one and it's not the current call
+    if (currentCall && nextCall != null) {
+      const callEl = document.querySelector("[data-call-number='" +
+        currentCall.data.callNumber + "']"); /* eslint quotes:off */
+      callEl.classList.add('hidden');
+      currentCall.visibleAt = null;
+    }
+
+    if (nextCall) {
+      const callEl = document.querySelector("[data-call-number='" +
+        nextCall.data.callNumber + "']"); /* eslint quotes:off */
+      callEl.classList.remove('hidden');
+      nextCall.visibleAt = moment();
+    }
+  }, 1000);
 
   /**
    * handle directions, display route and map
@@ -20,43 +96,64 @@
    * @param {object} response google directions api results
    * @param {string} mapUrl google static map url with route highlighted
    */
-  socket.on('xdirections', function(msg, ackHandler) {
+  socket.on('directions', function(data, ackHandler) {
     if (ackHandler) ackHandler(true);
 
-    const callNumber = msg.callNumber;
-    const data = msg.response;
-    const mapUrl = msg.mapUrl + '&size=';
+    const callNumber = data.callNumber;
+    const directions = data.response;
+    const mapUrl = data.mapUrl + '&size=';
 
-    if (callNumber !== currentCallNumber) {
-      // directions are for a different call
-      console.log('directions came in for ', callNumber, ' but we are currently on call ', currentCallNumber);
+    // find the dom element for the call we are on
+    let callEl = document.querySelector("[data-call-number='" + callNumber + "']"); /* eslint quotes:off */
+    if (callEl == null) {
+      // directions are for a different call that we no longer or never have shown
+      console.log('directions came in for ', callNumber, ' but that call is not active');
       return;
     }
 
     // display estimated travel time
-    if (data.json.routes.length > 0 &&
-      data.json.routes[0].legs.length > 0 &&
-      data.json.routes[0].legs[0].steps.length > 0) {
-      $('.travel-time').text('estimated travel time is ' + data.json.routes[0].legs[0].duration.text);
+    let route = (directions.json.routes.length > 0 ? directions.json.routes[0] : null);
+    if (route && route.legs.length > 0 && route.legs[0].steps.length > 0) {
+      $('.travel-time').text('estimated travel time is ' + route.legs[0].duration.text);
     }
 
     // display route travel directions
-    if ($('.route ol').length != 0) {
+    if ($(callEl).find('.route ol').length != 0) {
       // clear them if they already have something
-      $('.route').empty();
-      $('.route').append($('<ol>'));
+      $(callEl).find('.route').empty();
+      $(callEl).find('.route').append($('<ol>'));
     }
-    for (let i = 0; i < data.json.routes[0].legs[0].steps.length; i++) {
-      $('.route ol').append($('<li>')
-        .html(data.json.routes[0].legs[0].steps[i].html_instructions +
-           ' (' + data.json.routes[0].legs[0].steps[i].distance.text + ')'));
+    for (let i = 0; i < route.legs[0].steps.length; i++) {
+      $(callEl).find('.route ol').append($('<li>')
+        .html(route.legs[0].steps[i].html_instructions +
+           ' (' + route.legs[0].steps[i].distance.text + ')'));
     }
 
-    // size the map to the container and have the browser fetch it
-    const m = $('.map');
-    m.empty();
-    m.append($('<img src="' + mapUrl + m[0].parentElement.offsetWidth + 'x' + m[0].parentElement.offsetHeight + '"/>'));
+    // Since we have to size the map to the container and have the browser fetch it
+    // queue it up to happen when the call is visible
+    let call = calls.find((entry) => entry.data.callNumber == callNumber);
+    if (call != undefined) {
+      call.mapUrl = mapUrl;
+      call.mapDisplayed = false;
+    } else {
+      console.log('call is not defined so we cannot store the mapUrl');
+    }
   });
+
+/**
+ * display the map
+ *
+ * @param {object} call call to display map for
+ */
+  function displayMap(call) {
+    let callEl = document.querySelector("[data-call-number='" + call.data.callNumber + "']"); /* eslint quotes:off */
+    const m = $(callEl).find('.map');
+    m.empty();
+    let width = m[0].parentElement.offsetWidth;
+    let height = m[0].parentElement.offsetHeight;
+    m.append($('<img src="' + call.mapUrl + width + 'x' + height + '"/>'));
+    call.mapDisplayed = true;
+  }
 
   /**
    * display initial or updated call information
@@ -76,16 +173,19 @@
     if (call == null) {
       // duplicate the template and add the call info to the dom
       callEl = document.getElementsByClassName('template')[0].cloneNode(true);
+      if (callEl == null) {
+        console.error('the html is not structured as expected');
+        return;
+      }
       callEl.classList.remove('template');
-      callEl.classList.remove('hidden');
       callEl.dataset.callNumber = callNumber;
-
+      const callContainer = document.getElementsByClassName('template')[0].parentElement;
       // add to the active calls,
       call = {
         data,
         countdownStart: moment(),
+        visibleAt: -1, // immediately
       };
-      calls.push(call);
 
       // display when the call came in to 911 operator
       let callTime = moment(data.callDateTime, 'MM/DD/YYYY HH:mm:ss');
@@ -105,16 +205,14 @@
         }
         $(callEl).find('.call .elapsed').text(moment.preciseDiff(callTime, moment()) + ' ago');
 
-        // if we reached OUT_SECS, then reset and hide and remove from active calls
-        if (elapsed >= OUT_SECS) {
-          clearInterval(call.countdownHandle);
-          call.countdownHandle = null;
-          callEl.parentElement.removeChild(callEl);
-          calls.splice(calls.indexOf(call), 1);
+        // if we reached CALL_ACTIVE_SECS, then reset and hide and remove from active calls
+        if (elapsed >= CALL_ACTIVE_SECS) {
+          call.state = 'EXPIRED';
         }
       }, 1000);
 
-      document.body.appendChild(callEl);
+      callContainer.appendChild(callEl);
+      calls.push(call);
     } else {
       // we found it, so maybe we are getting updated info
       call.data = data;
@@ -146,18 +244,6 @@
   });
 
   /**
-   * clear the screen contents of call data, and unhide the container
-   */
-  // function reset() {
-  //   $('.field').text('');
-  //   $('.route').empty();
-  //   $('.route').append($('<ol>'));
-  //   $('.map').empty();
-  //   $('.countdown').removeClass('red');
-  //   $('.container').removeClass('hidden');
-  // }
-
-  /**
    * display status
    */
   function statusUpdate() {
@@ -167,5 +253,4 @@
         console.log(results);
       });
   }
-  // statusUpdate();
 })();

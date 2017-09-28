@@ -26,37 +26,39 @@
     <link href="index.css" rel="stylesheet">
   </head>
   <body>
-    <div class="template container hidden">
-      <div class="col-left">
-        <div class="time-details">
-          <div class="countdown"></div>
-          <div class="call">
-            <span class="time field"></span>
-            <span class="elapsed field"></span>
+    <div class="calls">
+      <div class="template container hidden">
+        <div class="col-left">
+          <div class="time-details">
+            <div class="countdown"></div>
+            <div class="call">
+              <span class="time field"></span>
+              <span class="elapsed field"></span>
+            </div>
+          </div>
+
+          <div class="call-details">
+            <div class="breathing field"></div>
+            <div class="conscious field"></div>
+            <div class="call-type field"></div>
+          </div>
+
+          <div class="location-details">
+            <div class="travel-time field"></div>
+            <div class="location field"></div>
+            <div class="venue field"></div>
+            <div class="cross-streets field"></div>
           </div>
         </div>
 
-        <div class="call-details">
-          <div class="breathing field"></div>
-          <div class="conscious field"></div>
-          <div class="call-type field"></div>
+        <div class="col-right">
+          <div class="dispatch-code field"></div>
+          <div class="map"></div>
+          <div class="route"><ol></ol></div>
         </div>
-
-        <div class="location-details">
-          <div class="travel-time field"></div>
-          <div class="location field"></div>
-          <div class="venue field"></div>
-          <div class="cross-streets field"></div>
-        </div>
-      </div>
-
-      <div class="col-right">
-        <div class="dispatch-code field"></div>
-        <div class="map"></div>
-        <div class="route"><ol></ol></div>
       </div>
     </div>
-
+    
     <script src="/socket.io/socket.io.js"></script>
     <script src="index.js"></script>
   </body>

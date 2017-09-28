@@ -1,3 +1,5 @@
+/* eslint-env node */
+
 /** nodejs server code for dispatch display system
  *
  * environment variables:
@@ -27,11 +29,11 @@ const STATIC_MAP_BASE_URL =
   'https://maps.googleapis.com/maps/api/staticmap?&maptype=roadmap&scale=2&key=' +
   process.env.GOOGLE_STATIC_MAPS_API_KEY; // &zoom=14
 
-const STATIONS = [
-  {id: 'APFESA', lat: 59.7796476, lng: -151.8342569, ip_match_regex: /10\.0\.3\.158/},
+const STATIONS = [ /* eslint no-multi-spaces: off */
   // {id: 'BCFSA',  lat: 60.1693453, lng: -149.4019433, ip_match_regex: /::1/},
   // {id: 'CES',    lat: 60.4829661, lng: -151.0722942, ip_match_regex: /10\.0\.3\.*/},
   {id: 'CES',    lat: 60.4829661, lng: -151.0722942, ip_match_regex: /.*/},
+  {id: 'APFESA', lat: 59.7796476, lng: -151.8342569, ip_match_regex: /10\.0\.3\.158/},
   {id: 'MES',    lat: 60.4829661, lng: -151.0722942, ip_match_regex: /::1/},
   {id: 'BES',    lat: 60.4829661, lng: -151.0722942, ip_match_regex: /10\.0\.3\.167/},
 ];
@@ -161,14 +163,13 @@ io.on('connection', function(socket) {
   for (let i = callHistory.length - 1; i >= 0; i--) {
     if (callHistory[i].callData.station == station.id) {
       let age = ((new Date() - new Date(callHistory[i].receivedDate)) / 1000);
-      console.log('age from ', callHistory[i].receivedDate, age, TTL);
       if (age < TTL) {
         console.log('sending');
         sendToStation('call', callHistory[i].callData, socket.conn.remoteAddress.toString());
         if (callHistory[i].directionsData) {
           sendToStation('directions', callHistory[i].directionsData, socket.conn.remoteAddress.toString());
         }
-        break;
+//        break;
       }
     }
   }
@@ -301,22 +302,6 @@ app.get('/status', function(req, res) {
   // let body = '';
   const directoryKeys = Object.getOwnPropertyNames(directory)
     .sort((a, b) => directory[a].station.id.localeCompare(directory[b].station.id));
-  // for (let i = 0; i < directoryKeys.length; i++) {
-  //   const entry = directory[directoryKeys[i]];
-  //   body += '<h1>' + entry.station.id + entry.posts.length + '</h1>';
-  //   for (let j = 0; j < entry.posts.length; j++) {
-  //     // console.log(entry.posts[j]);
-  //     const call = callHistory.find((call) => call.callNumber == entry.posts[j].callNumber);
-  //     body += '<p>' + entry.posts[j].callNumber + ' ' + call.callData.callType +
-  //       ' sent at ' + entry.posts[j].call_sent + ' ' +
-  //       (entry.posts[j].call_ack ? 'acknowledged' : 'not acknowledged') +
-  //
-  //       ' directions sent at ' + entry.posts[j].call_sent + ' ' +
-  //       (entry.posts[j].directions_ack ? 'acknowledged' : 'not acknowledged') +
-  //        '</p>';
-  //   }
-  // }
-  // res.send(body);
   res.json({
     directory: directoryKeys.map((id) => ({
       id: directory[id].station.id,
