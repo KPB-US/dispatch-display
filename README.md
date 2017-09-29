@@ -30,6 +30,11 @@ Displays 911 dispatch details, timer, and map in the station. Cycles through mul
   venue: null,
 }
 ```
+## production
+
+1. set up your nodejs server to run server.js
+2. Set up your RasperryPi 3's with debian jessie to point chromium at your server http://server.
+3. Get your 911 system (or an intermediary) to post calls to your server at http://server/incoming.
 
 ## development
 
