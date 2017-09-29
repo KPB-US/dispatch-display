@@ -1,7 +1,7 @@
 # dispatch-display
 Displays 911 dispatch details, timer, and map in the station. Cycles through multiple active calls.  Displays a call log when no calls are active.
 
-![selection_214](https://user-images.githubusercontent.com/473165/30765332-a2a3af5e-9f9b-11e7-978e-a816690ce51d.png)
+![image](https://user-images.githubusercontent.com/473165/31039706-621baff4-a52c-11e7-8593-2bd326b41b45.png)
 
 ## configuration
 
