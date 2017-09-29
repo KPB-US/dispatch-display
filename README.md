@@ -38,7 +38,7 @@ Displays 911 dispatch details, timer, and map in the station. Cycles through mul
 1. run `npm install`
 1. run `node server.js`
 1. Point your display's browser to http://localhost:3000
-1. Use postman to post the following to http://localhost:3000/incoming
+1. Use [postman](https://www.getpostman.com/apps) to post the following to http://localhost:3000/incoming
 
 ```
 {
