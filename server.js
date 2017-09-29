@@ -5,6 +5,7 @@
  * environment variables:
  *  GOOGLE_DIRECTIONS_API_KEY
  *  GOOGLE_STATIC_MAPS_API_KEY
+ *  ROLLBAR_TOKEN
  */
 
 require('dotenv').config();
@@ -135,6 +136,7 @@ app.use('/socket.io', express.static('node_modules/socket.io-client/dist'));
 app.use(express.static('js'));
 app.use(express.static('css'));
 app.use(express.static('static'));
+app.use('/fonts', express.static('fonts'));
 
 // send the main page
 app.get('/', function(req, res) {
@@ -169,16 +171,26 @@ io.on('connection', function(socket) {
         if (callHistory[i].directionsData) {
           sendToStation('directions', callHistory[i].directionsData, socket.conn.remoteAddress.toString());
         }
-//        break;
       }
     }
   }
 
+  // if the station asks for call logs, send them their calls
+  socket.on('calls-log-query', function() {
+    console.log('station', station.id, 'requested calls log', socket.conn.remoteAddress);
+    let calls = callHistory.filter((entry) => entry.callData.station == station.id);
+    console.log(calls);
+    sendToStation('calls-log', {
+      station: station.id,
+      calls,
+    }, socket.conn.remoteAddress.toString());
+  });
+
   socket.on('disconnect', function(reason) {
      console.log('user disconnected', socket.conn.remoteAddress, reason);
      delete directory[socket.conn.remoteAddress.toString()];
-   });
- });
+  });
+});
 
 /**
  * send data to the appropriate, connected stations

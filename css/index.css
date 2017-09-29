@@ -8,34 +8,61 @@ body {
 }
 
 .calls {
-
 }
-
-.container {
-  position: absolute;
-  transition: left 1s, opacity 1s;
+.calls-index {
+  position:absolute;
+  top: 0;
   left: 0;
-  opacity: 1;
+  display: block;
+  background-color: transparent;
+  z-index: 1000;
+  font-size: 2vw;
+  padding-left: 1vw;
+  color: #0;
+}
+.calls-index i {
+  padding: 0;
+  display: inline-block;
+  text-align: center;
+  vertical-align: middle;
+  margin: .2vw;
+  border-radius: 3vw;
+  background-color: #ddd;
+  border: solid 1px #ccc;
+  height: 3vw;
+  width: 3vw;
+  opacity: .5;
+  font-style: normal;
+}
+.calls-index i.current {
+  background-color: #ffaaaa;
+  font-size: 3vw;
+  height: 4vw;
+  width: 4vw;
+  line-height: 4vw;
+  opacity: .8;
+}
+.container {
+  transition: left .5s, opacity 1s;
+  position: absolute;
+  left: 100vw;
+  opacity: 0;
   display: table;
   table-layout: fixed;
   word-wrap: break-word;
   width: 100%;
 }
+.container.shown {
+  left: 0;
+  opacity: 1;
+}
 .container.hidden {
-  left: -1000vw;
+  left: -100vw;
   opacity: 0;
+  /*left: -1000vw;
+  opacity: 0;*/
 }
 .hidden {
-  //opacity: 0;
-  //left: -1000vw;
-}
-.stage-right {
-  left: 1000vw;
-  opacity: 0;
-}
-.stage-left {
-  left: -1000vw;
-  opacity: 0;
 }
 .col-left {
   vertical-align: top;
@@ -49,6 +76,29 @@ body {
   display: table-cell;
   width: 65%;
   background-color: #fff;
+}
+.calls-log {
+  background-color: #010101;
+  color: #ddd;
+  //width: 90%;
+  height: 100vh;
+  font-size: 2vw;
+}
+.working {
+  display: table;
+  height: 100%;
+  width: 100%;
+}
+.calls-log .working i {
+  display: table-cell;
+  text-align: center;
+  vertical-align: middle;
+}
+.calls-log.hidden {
+  display: none;
+}
+.calls-log table {
+  width: 100%;
 }
 
 /* time */
@@ -131,7 +181,6 @@ body {
   left: 1vw;
   z-index: 55;
   color: white;
-//  background-color: #d46a6a;
   background-color: #ffaaaa;
 }
 

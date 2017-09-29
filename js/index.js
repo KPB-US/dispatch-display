@@ -5,26 +5,65 @@
   'use strict';
 
   const CALL_ACTIVE_SECS = 60 * 10; // time the call is active after which it should disappear
-  const SWITCH_AFTER_SECS = 4; // how quickly we should switch between active calls
+  const SWITCH_AFTER_SECS = 5; // how quickly we should switch between active calls
   const socket = io();
   const calls = []; // keep track of currently active calls
 
+/**
+ * update the index
+ *
+ * @param {string} x call index
+ * @param {string} y calls count
+ */
+  function updateCallIndex(x, y) {
+    let html = '';
+    if (y > 1) {
+      for (let i = 1; i <= y; i++) {
+        if (i == x) {
+          html += `<i class="current">${calls[i - 1].data.dispatchCode}</i>`;
+        } else {
+          html += `<i>${calls[i - 1].data.dispatchCode}</i>`;
+        }
+      }
+    }
+    if ($('.calls-index').html() != html) {
+      $('.calls-index').html(html);
+    }
+  }
+
   // set up a timer that will iterate through displaying the call
   setInterval(function() {
+    // if there are calls hide the log, otherwise, show the log
+    if (calls.length > 0) {
+      $('.calls-log').addClass('hidden');
+    } else {
+      if ($('.calls-log').hasClass('hidden')) {
+        socket.emit('calls-log-query');
+        $('.calls-log').empty();//.html('<div class="working"><i class="fa fa-5x fa-spin fa-spinner"></i></div>');
+        $('.calls-log').removeClass('hidden');
+      }
+    }
+
     let urgentCall = calls.find((entry) => entry.visibleAt == -1);
     if (urgentCall) {
       // hide the other call containers and set their activeAt time to 0
-      $('.container').addClass('hidden');
+      let el = $('.container.shown').addClass('hidden').removeClass('shown');
+      // revert after 1s so transition can come in from right
+      setTimeout(() => {
+        $(el).removeClass('hidden');
+      }, 1000);
+
       for (let i = 0; i < calls.length; i++) {
         calls[i].visibleAt = null;
       }
       urgentCall.visibleAt = moment();
       const callEl = document.querySelector("[data-call-number='" +
         urgentCall.data.callNumber + "']"); /* eslint quotes:off */
-      callEl.classList.remove('hidden');
+      $(callEl).removeClass('hidden').addClass('shown');
       if (!urgentCall.mapDisplayed && urgentCall.mapUrl) {
         displayMap(urgentCall);
       }
+      updateCallIndex(calls.indexOf(urgentCall) + 1, calls.length);
       return;
     }
 
@@ -35,8 +74,14 @@
         calls[i].countdownHandle = null;
         const callEl = document.querySelector("[data-call-number='" +
           calls[i].data.callNumber + "']"); /* eslint quotes:off */
-        callEl.parentElement.removeChild(callEl);
         calls.splice(i, 1);
+        if ($(callEl).hasClass('shown')) {
+          $(callEl).removeClass('shown').addClass('hidden');
+        }
+        // remove from dom behind the scenes so it transitions out nicely
+        setTimeout(() => {
+          callEl.parentElement.removeChild(callEl);
+        }, 1000);
       }
     }
 
@@ -65,9 +110,13 @@
           // the current call is the only call
           nextCall = currentCall;
         }
+      } else {
+        // still on current call
+        nextCall = currentCall;
       }
     }
 
+    updateCallIndex(calls.indexOf(nextCall) + 1, calls.length);
     if (nextCall == currentCall) {
       return;
     }
@@ -76,14 +125,18 @@
     if (currentCall && nextCall != null) {
       const callEl = document.querySelector("[data-call-number='" +
         currentCall.data.callNumber + "']"); /* eslint quotes:off */
-      callEl.classList.add('hidden');
+      $(callEl).addClass('hidden').removeClass('shown');
+      // revert after 1s so transition can come in from right
+      setTimeout(() => {
+        $(callEl).removeClass('hidden');
+      }, 1000);
       currentCall.visibleAt = null;
     }
 
     if (nextCall) {
       const callEl = document.querySelector("[data-call-number='" +
         nextCall.data.callNumber + "']"); /* eslint quotes:off */
-      callEl.classList.remove('hidden');
+      $(callEl).removeClass('hidden').addClass('shown');
       nextCall.visibleAt = moment();
     }
   }, 1000);
@@ -244,13 +297,18 @@
   });
 
   /**
-   * display status
+   * display calls log
+   *
+   * data from websocket from server
+   * @param {array} calls array of call data for this station
    */
-  function statusUpdate() {
-    fetch('/status')
-      .then((results) => results.json())
-      .then((results) => {
-        console.log(results);
-      });
-  }
+  socket.on('calls-log', function(data, ackHandler) {
+    // acknowledge that we received the data
+    if (ackHandler) ackHandler(true);
+
+    console.log('got calls-log', data);
+    const rows = data.calls.map((entry) => `<tr><td>${entry.callData.callDateTime}</td><td>${entry.callData.callType}</td><td>${entry.callData.dispatchCode}</td><td>${entry.callData.location}</td></tr>`)
+      .join('');
+    $('.calls-log').html('<table>' + rows + '</table>');
+  });
 })();

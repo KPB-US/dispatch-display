@@ -22,12 +22,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
     <script src="moment-precise-range.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Oswald" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Cousine" rel="stylesheet">
+    <link href="font-awesome.min.css" rel="stylesheet">
     <link href="index.css" rel="stylesheet">
   </head>
   <body>
     <div class="calls">
-      <div class="template container hidden">
+      <div class="calls-index"></div>
+      
+      <div class="template container">
         <div class="col-left">
           <div class="time-details">
             <div class="countdown"></div>
@@ -58,7 +60,10 @@
         </div>
       </div>
     </div>
-    
+
+    <div class="calls-log hidden">
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="index.js"></script>
   </body>
