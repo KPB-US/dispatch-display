@@ -1,12 +1,6 @@
 /* eslint-env node */
 
-/** nodejs server code for dispatch display system
- *
- * environment variables:
- *  GOOGLE_DIRECTIONS_API_KEY
- *  GOOGLE_STATIC_MAPS_API_KEY
- *  ROLLBAR_TOKEN
- */
+// nodejs server for dispatch display system
 
 require('dotenv').config();
 
@@ -24,7 +18,8 @@ const googleMapsClient = require('@google/maps').createClient({
 });
 const rollbar = new Rollbar(process.env.ROLLBAR_TOKEN);
 
-const TTL = 60 * 10; // call is considered active at the station for this long
+const DISPLAY_TTL = process.env.DISPLAY_TTL || 60 * 10; // call is considered active at the station for this long
+const CALL_HISTORY_LIMIT = process.env.CALL_HISTORY_LIMIT || 20;
 
 const STATIC_MAP_BASE_URL =
   'https://maps.googleapis.com/maps/api/staticmap?&maptype=roadmap&scale=2&key=' +
@@ -41,7 +36,6 @@ const STATIONS = [ /* eslint no-multi-spaces: off */
 
 // keep track of inbound calls so we dont duplicate them across displays
 const callHistory = [];
-const CALL_HISTORY_LIMIT = process.env.CALL_HISTORY_LIMIT || 20;
 
 /**
  * returns station matching id
@@ -69,7 +63,7 @@ function findStationBasedOnIpMatch(ip) {
  * @param {object} body JSON posted from 911 system
  * @return {object} formattedData expected by display system
  */
-function parseFromKpb911(body) {
+function parseFrom911(body) {
   let data = {
     callNumber: null,
     callDateTime: null,
@@ -79,7 +73,7 @@ function parseFromKpb911(body) {
 
     station: null,
     dispatchDateTime: null,
-    dispatchCode: '',
+    dispatchCode: '', // severity level
 
     location: null,
     crossStreets: null,
@@ -94,7 +88,9 @@ function parseFromKpb911(body) {
 
     // call type is prefixed by some number and a dash
     let parts = body.callType.split('-');
-    parts.shift();
+    if (parts.length > 1) {
+      parts.shift();
+    }
     data.callType = parts.join('-');
 
     data.callDateTime = body.callDateTime;
@@ -165,7 +161,7 @@ io.on('connection', function(socket) {
   for (let i = callHistory.length - 1; i >= 0; i--) {
     if (callHistory[i].callData.station == station.id) {
       let age = ((new Date() - new Date(callHistory[i].receivedDate)) / 1000);
-      if (age < TTL) {
+      if (age < DISPLAY_TTL) {
         console.log('sending');
         sendToStation('call', callHistory[i].callData, socket.conn.remoteAddress.toString());
         if (callHistory[i].directionsData) {
@@ -179,7 +175,6 @@ io.on('connection', function(socket) {
   socket.on('calls-log-query', function() {
     console.log('station', station.id, 'requested calls log', socket.conn.remoteAddress);
     let calls = callHistory.filter((entry) => entry.callData.station == station.id);
-    console.log(calls);
     sendToStation('calls-log', {
       station: station.id,
       calls,
@@ -233,7 +228,7 @@ function sendToStation(type, data, ip) {
  */
 app.post('/incoming', function(req, res) {
   // parse the data
-  const data = parseFromKpb911(req.body);
+  const data = parseFrom911(req.body);
   if (!data.valid) {
     console.log('Could not parse the incoming data', req.body);
     res.status(500).send('Could not parse the incoming data.');
@@ -263,7 +258,7 @@ app.post('/incoming', function(req, res) {
   }
 
   // if we have a location to map...
-  // TODO! change diretions caching from last only to an array of up to the call history limit or use the call history?
+  // TODO! change directions caching from last only to an array of up to the call history limit or use the call history?
   if (data.location) {
     // if we have already successfully mapped it, then send the cached data
     if (testCache.location != null && testCache.location === data.location) {
@@ -311,7 +306,6 @@ app.post('/incoming', function(req, res) {
 });
 
 app.get('/status', function(req, res) {
-  // let body = '';
   const directoryKeys = Object.getOwnPropertyNames(directory)
     .sort((a, b) => directory[a].station.id.localeCompare(directory[b].station.id));
   res.json({
@@ -323,6 +317,7 @@ app.get('/status', function(req, res) {
   });
 });
 
-http.listen(3000, function() {
-  console.log('listening on *:3000');
+const PORT = process.env.PORT || 3000;
+http.listen(PORT, function() {
+  console.log(`listening on *:${PORT}`);
 });

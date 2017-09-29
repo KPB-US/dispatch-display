@@ -6,6 +6,7 @@
 
   const CALL_ACTIVE_SECS = 60 * 10; // time the call is active after which it should disappear
   const SWITCH_AFTER_SECS = 5; // how quickly we should switch between active calls
+
   const socket = io();
   const calls = []; // keep track of currently active calls
 
@@ -39,7 +40,7 @@
     } else {
       if ($('.calls-log').hasClass('hidden')) {
         socket.emit('calls-log-query');
-        $('.calls-log').empty();//.html('<div class="working"><i class="fa fa-5x fa-spin fa-spinner"></i></div>');
+        $('.calls-log').empty();
         $('.calls-log').removeClass('hidden');
       }
     }
