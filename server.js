@@ -30,8 +30,6 @@ const STATIONS = [ /* eslint no-multi-spaces: off */
   // {id: 'CES',    lat: 60.4829661, lng: -151.0722942, ip_match_regex: /10\.0\.3\.*/},
   {id: 'CES',    lat: 60.4829661, lng: -151.0722942, ip_match_regex: /.*/},
   {id: 'APFESA', lat: 59.7796476, lng: -151.8342569, ip_match_regex: /10\.0\.3\.158/},
-  {id: 'MES',    lat: 60.4829661, lng: -151.0722942, ip_match_regex: /::1/},
-  {id: 'BES',    lat: 60.4829661, lng: -151.0722942, ip_match_regex: /10\.0\.3\.167/},
 ];
 
 // keep track of inbound calls so we dont duplicate them across displays
@@ -305,17 +303,17 @@ app.post('/incoming', function(req, res) {
   res.send('OK');
 });
 
-app.get('/status', function(req, res) {
-  const directoryKeys = Object.getOwnPropertyNames(directory)
-    .sort((a, b) => directory[a].station.id.localeCompare(directory[b].station.id));
-  res.json({
-    directory: directoryKeys.map((id) => ({
-      id: directory[id].station.id,
-      posts: directory[id].posts,
-    })),
-    callHistory,
-  });
-});
+// app.get('/status', function(req, res) {
+//   const directoryKeys = Object.getOwnPropertyNames(directory)
+//     .sort((a, b) => directory[a].station.id.localeCompare(directory[b].station.id));
+//   res.json({
+//     directory: directoryKeys.map((id) => ({
+//       id: directory[id].station.id,
+//       posts: directory[id].posts,
+//     })),
+//     callHistory,
+//   });
+// });
 
 const PORT = process.env.PORT || 3000;
 http.listen(PORT, function() {

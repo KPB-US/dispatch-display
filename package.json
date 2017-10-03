@@ -4,7 +4,7 @@
   "description": "display dispatch information on screen",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha server.spec.js"
   },
   "repository": {
     "type": "git",
@@ -25,8 +25,10 @@
     "socket.io": "^2.0.3"
   },
   "devDependencies": {
+    "chai": "^4.1.2",
     "eslint": "^4.7.1",
     "eslint-config-google": "^0.9.1",
+    "mocha": "^4.0.0",
     "morgan": "^1.8.2"
   }
 }
