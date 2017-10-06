@@ -48,15 +48,15 @@ Displays 911 dispatch details, timer, and map in the station. Cycles through mul
 
 ```
 {
-	"location": "144 N BINKLEY ST",
-	"venue": "SOLDOTNA",
-	"crossStreets": "N BINKLY ST / PARK ST",
-	"station": "CES",
-	"callNumber": "4448",
-	"callType": "43-Caffeine Withdrawal",
-	"callDateTime": "09/25/2017 08:44:34",
-	"dispatchDateTime": "09/25/2017 08:47:47",
-	"dispatchCode": "25C01",
+  "location": "144 N BINKLEY ST",
+  "venue": "SOLDOTNA",
+  "crossStreets": "N BINKLY ST / PARK ST",
+  "station": "CES",
+  "callNumber": "4448",
+  "callType": "43-Caffeine Withdrawal",
+  "callDateTime": "09/25/2017 08:44:34",
+  "dispatchDateTime": "09/25/2017 08:47:47",
+  "dispatchCode": "25C01",
   "callInfo": "93 year old, female, breathing, conscious.",
   "ccText": "shakes and convulsions",
 }
