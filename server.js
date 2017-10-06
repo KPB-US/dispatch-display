@@ -97,12 +97,12 @@ function parseFrom911(body) {
 
     // it will have a dispatch code but we might not be able to parse the priority from it
     let dispatchCode = body.dispatchCode.match(/[A-Z]/);
-    if (dispatchCode.length > 0) {
+    if (dispatchCode && dispatchCode.length > 0) {
       data.dispatchCode = dispatchCode[0];
     }
 
     /* might haves */
-    if (body.location) data.location = body.location
+    if (body.location) data.location = body.location;
     if (body.locationType) data.locationType = body.locationType;
     if (body.crossStreets) data.crossStreets = body.crossStreets;
     if (body.venue) data.venue = body.venue;
@@ -115,6 +115,7 @@ function parseFrom911(body) {
 
     data.valid = true; // if we got this far, it's a valid incoming packet of data
   } catch (e) {
+    console.log(e);
     data.valid = false;
   }
 
