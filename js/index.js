@@ -279,11 +279,17 @@
       $(callEl).find('.dispatch-code').text(data.dispatchCode);
     }
 
-    if (data.breathing) {
-      $(callEl).find('.breathing').text('BREATHING: ' + data.breathing);
+    // if (data.breathing) {
+    //   $(callEl).find('.breathing').text('BREATHING: ' + data.breathing);
+    // }
+    // if (data.conscious) {
+    //   $(callEl).find('.conscious').text('CONSCIOUS: ' + data.conscious);
+    // }
+    if (data.callInfo) {
+      $(callEl).find('.call-info').text(data.callInfo);
     }
-    if (data.conscious) {
-      $(callEl).find('.conscious').text('CONSCIOUS: ' + data.conscious);
+    if (data.ccText) {
+      $(callEl).find('.call-cctext').text(data.ccText);
     }
 
     if (data.location) {

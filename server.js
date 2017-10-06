@@ -20,6 +20,7 @@ const rollbar = new Rollbar(process.env.ROLLBAR_TOKEN);
 
 const DISPLAY_TTL = process.env.DISPLAY_TTL || 60 * 10; // call is considered active at the station for this long
 const CALL_HISTORY_LIMIT = process.env.CALL_HISTORY_LIMIT || 20;
+const ADDRESS_SUFFIX = process.env.ADDRESS_SUFFIX || '';
 
 const STATIC_MAP_BASE_URL =
   'https://maps.googleapis.com/maps/api/staticmap?&maptype=roadmap&scale=2&key=' +
@@ -66,8 +67,8 @@ function parseFrom911(body) {
     callNumber: null,
     callDateTime: null,
     callType: 'Unknown',
-    breathing: 'Unknown',
-    conscious: 'Unknown',
+    callInfo: '',
+    ccText: '',
 
     station: null,
     dispatchDateTime: null,
@@ -82,7 +83,7 @@ function parseFrom911(body) {
   try {
     /* must haves */
     data.callNumber = body.callNumber;
-    data.station = body.district.split(' ')[0]; // district is prefixed by station abbreviation
+    data.station = body.station;
 
     // call type is prefixed by some number and a dash
     let parts = body.callType.split('-');
@@ -92,7 +93,7 @@ function parseFrom911(body) {
     data.callType = parts.join('-');
 
     data.callDateTime = body.callDateTime;
-    data.dispatchDateTime = body.DispatchDateTime;
+    data.dispatchDateTime = body.dispatchDateTime;
 
     // it will have a dispatch code but we might not be able to parse the priority from it
     let dispatchCode = body.dispatchCode.match(/[A-Z]/);
@@ -101,11 +102,16 @@ function parseFrom911(body) {
     }
 
     /* might haves */
-    if (body.location) data.location = body.location;
+    if (body.location) data.location = body.location
+    if (body.locationType) data.locationType = body.locationType;
     if (body.crossStreets) data.crossStreets = body.crossStreets;
     if (body.venue) data.venue = body.venue;
     if (body.breathing) data.breathing = body.breathing;
     if (body.conscious) data.conscious = body.conscious;
+    if (body.commonName) data.commonName = body.commonName;
+    if (body.response) data.response = body.response;
+    if (body.callInfo) data.callInfo = body.callInfo;
+    if (body.ccText) data.ccText = body.ccText;
 
     data.valid = true; // if we got this far, it's a valid incoming packet of data
   } catch (e) {
@@ -122,7 +128,7 @@ let testCache = {
   data: null,
 };
 
-// app.use(morgan('combined')); // logging requests to console
+app.use(morgan('combined')); // logging requests to console
 app.use(bodyParser.json()); // https://stackoverflow.com/questions/5710358/how-to-retrieve-post-query-parameters
 
 // serve static files
@@ -229,7 +235,7 @@ app.post('/incoming', function(req, res) {
   const data = parseFrom911(req.body);
   if (!data.valid) {
     console.log('Could not parse the incoming data', req.body);
-    res.status(500).send('Could not parse the incoming data.');
+    res.status(400).send('Could not parse the incoming data.');
     return;
   }
 
@@ -267,7 +273,7 @@ app.post('/incoming', function(req, res) {
       googleMapsClient.directions({
         origin: [station.lat, station.lng],
         destination: (data.location.match(/[A-Z]/) == null ?
-          data.location.split(',').map((s) => Number(s)) : data.location),
+          data.location.split(',').map((s) => Number(s)) : data.location + ADDRESS_SUFFIX),
         mode: 'driving',
       }).asPromise()
         .then((response) => {

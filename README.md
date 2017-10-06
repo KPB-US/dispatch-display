@@ -11,6 +11,7 @@ Displays 911 dispatch details, timer, and map in the station. Cycles through mul
 - ROLLBAR_TOKEN
 - DISPLAY_TTL
 - CALL_HISTORY_LIMIT
+- ADDRESS_SUFFIX (for helping GoogleMaps find the location in your area)
 2. Update the list of `STATIONS` in server.js.
 3. Update the `parseFrom911` function in server.js to parse your JSON data into the object used by dispatch-display:
 ```
@@ -18,8 +19,8 @@ Displays 911 dispatch details, timer, and map in the station. Cycles through mul
   callNumber: null,
   callDateTime: null,
   callType: 'Unknown',
-  breathing: 'Unknown',
-  conscious: 'Unknown',
+  callInfo: '',
+  ccText: '',
 
   station: null,
   dispatchDateTime: null,
@@ -50,13 +51,13 @@ Displays 911 dispatch details, timer, and map in the station. Cycles through mul
 	"location": "144 N BINKLEY ST",
 	"venue": "SOLDOTNA",
 	"crossStreets": "N BINKLY ST / PARK ST",
-	"district": "CES AMBULANCE",
+	"station": "CES",
 	"callNumber": "4448",
 	"callType": "43-Caffeine Withdrawal",
 	"callDateTime": "09/25/2017 08:44:34",
 	"dispatchDateTime": "09/25/2017 08:47:47",
 	"dispatchCode": "25C01",
-	"breathing": "Yes",
-	"conscious": "No"
+  "callInfo": "93 year old, female, breathing, conscious.",
+  "ccText": "shakes and convulsions",
 }
 ```
