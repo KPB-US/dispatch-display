@@ -3,6 +3,7 @@
 // nodejs server for dispatch display system
 
 require('dotenv').config();
+const stations = require('./stations');
 
 const Rollbar = require('rollbar');
 const express = require('express');
@@ -26,35 +27,8 @@ const STATIC_MAP_BASE_URL =
   'https://maps.googleapis.com/maps/api/staticmap?&maptype=roadmap&scale=2&key=' +
   process.env.GOOGLE_STATIC_MAPS_API_KEY; // &zoom=14
 
-const STATIONS = [ /* eslint no-multi-spaces: off */
-  // {id: 'BCFSA',  lat: 60.1693453, lng: -149.4019433, ip_match_regex: /::1/},
-  // {id: 'CES',    lat: 60.4829661, lng: -151.0722942, ip_match_regex: /10\.0\.3\.*/},
-  {id: 'CES',    lat: 60.4829661, lng: -151.0722942, ip_match_regex: /.*/},
-  {id: 'APFESA', lat: 59.7796476, lng: -151.8342569, ip_match_regex: /10\.0\.3\.158/},
-];
-
 // keep track of inbound calls so we dont duplicate them across displays
 const callHistory = [];
-
-/**
- * returns station matching id
- *
- * @param {string} id id of station
- * @return {object} STATION entry or null if not found
- */
-function findStation(id) {
-  return STATIONS.find((entry) => entry.id == id);
-}
-
-/**
- * returns station matching ip rule
- *
- * @param {string} ip ip address of client
- * @return {object} STATION entry or null if not found
- */
-function findStationBasedOnIpMatch(ip) {
-  return STATIONS.find((entry) => ip.match(entry.ip_match_regex) != null);
-}
 
 /**
  * parses incoming data from the 911 system into an object we can use
@@ -72,7 +46,7 @@ function parseFrom911(body) {
 
     station: null,
     dispatchDateTime: null,
-    dispatchCode: '', // severity level
+    dispatchCode: '?', // severity level
 
     location: null,
     crossStreets: null,
@@ -99,6 +73,8 @@ function parseFrom911(body) {
     let dispatchCode = body.dispatchCode.match(/[A-Z]/);
     if (dispatchCode && dispatchCode.length > 0) {
       data.dispatchCode = dispatchCode[0];
+    } else {
+      data.dispatchCode = '?';
     }
 
     /* might haves */
@@ -113,6 +89,10 @@ function parseFrom911(body) {
     if (body.callInfo) data.callInfo = body.callInfo;
     if (body.ccText) data.ccText = body.ccText;
 
+    // if (data.location.toUpperCase() === '<UNKNOWN>' || data.callType.toUpperCase() === '<NEW CALL>') {
+    //   throw new Error('unknown location or new call with insufficient data');
+    // }
+
     data.valid = true; // if we got this far, it's a valid incoming packet of data
   } catch (e) {
     console.log(e);
@@ -123,11 +103,6 @@ function parseFrom911(body) {
 }
 
 let directory = {}; // directory of the STATION entry and socket based on key of ip
-
-let testCache = {
-  location: null,
-  data: null,
-};
 
 app.use(morgan('combined')); // logging requests to console
 app.use(bodyParser.json()); // https://stackoverflow.com/questions/5710358/how-to-retrieve-post-query-parameters
@@ -152,7 +127,7 @@ app.get('/', function(req, res) {
 io.on('connection', function(socket) {
   console.log('a user connected', socket.conn.remoteAddress);
   // determine what station they are and if it is a valid connection
-  let station = findStationBasedOnIpMatch(socket.conn.remoteAddress);
+  let station = stations.findStationBasedOnIpMatch(socket.conn.remoteAddress);
   if (station == null) {
     console.log('  that remoteAddress is not registered in the STATIONS list');
     socket.disconnect(true);
@@ -240,10 +215,10 @@ app.post('/incoming', function(req, res) {
     return;
   }
 
-  const station = findStation(data.station);
+  const station = stations.findStation(data.station);
   if (station == null) {
     console.log('Not handling calls for that station', req.body);
-    res.status(404).send('Not handling calls for that station.');
+    res.status(404).send('Not configured to handle calls for that station.');
     return;
   }
 
@@ -266,11 +241,15 @@ app.post('/incoming', function(req, res) {
   // TODO! change directions caching from last only to an array of up to the call history limit or use the call history?
   if (data.location) {
     // if we have already successfully mapped it, then send the cached data
-    if (testCache.location != null && testCache.location === data.location) {
-      testCache.data.callNumber = data.callNumber;
-      sendToStation('directions', testCache.data);
+    if (call.location && call.location === data.location && call.directionsData) {
+      console.log('sending cached directions', data.callNumber);
+      sendToStation('directions', {
+        location: call.location,
+        data: call.directionsData,
+      });
     } else {
       // otherwise, query google for the directions and map and send it and cache it
+      console.log('fetching new directions', data.callNumber);
       googleMapsClient.directions({
         origin: [station.lat, station.lng],
         destination: (data.location.match(/[A-Z]/) == null ?
@@ -291,10 +270,6 @@ app.post('/incoming', function(req, res) {
               station: data.station,
               response,
               mapUrl: STATIC_MAP_BASE_URL + '&path=enc:' + enc + markers,
-            };
-            testCache = {
-              location: data.location,
-              data: directions,
             };
             sendToStation('directions', directions);
             call.directionsData = directions;

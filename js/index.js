@@ -168,7 +168,7 @@
     // display estimated travel time
     let route = (directions.json.routes.length > 0 ? directions.json.routes[0] : null);
     if (route && route.legs.length > 0 && route.legs[0].steps.length > 0) {
-      $('.travel-time').text('estimated travel time is ' + route.legs[0].duration.text);
+      $(callEl).find('.travel-time').text('estimated travel time is ' + route.legs[0].duration.text);
     }
 
     // display route travel directions
