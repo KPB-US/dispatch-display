@@ -19,42 +19,43 @@ chai.use(chaiHttp);
 
 describe('call logs', function() {
   it('should render logs for station requesting them', function(done) {
-    // chai.request(app)
-    // .get('/')
-    // .end(function(err, res) {
-    //   if (err) return done(err);
-    //   res.should.have.status(200);
-       done();
-    // });
+    chai.request(app)
+    .get('/')
+    .end(function(err, res) {
+      if (err) return done(err);
+      res.should.have.status(200);
+      res.should.be.json();
+      done();
+    });
   });
 });
 
-// describe('sockets', function() {
-//   it('should allow ip matched displays', function() {
+describe('sockets', function() {
+  it('should allow ip matched displays', function() {
 
-//   });
-//   it('should not allow displays with unmatched ips', function() {
+  });
+  it('should not allow displays with unmatched ips', function() {
 
-//   });
-//   it('should track connected displays', function() {
+  });
+  it('should track connected displays', function() {
 
-//   });
-//   it('should allow multiple displays at same station', function() {
+  });
+  it('should allow multiple displays at same station', function() {
 
-//   });
-//   it('should stop tracking disconnected displays', function() {
+  });
+  it('should stop tracking disconnected displays', function() {
 
-//   });
-//   it('call should go to all connected displays for station', function() {
+  });
+  it('call should go to all connected displays for station', function() {
 
-//   });
-//   it('call should be acknowledged upon receipt by display', function() {
+  });
+  it('call should be acknowledged upon receipt by display', function() {
 
-//   });
-//   it('directions should be acknowledged upon receipt by display', function() {
+  });
+  it('directions should be acknowledged upon receipt by display', function() {
 
-//   });
-//   it('directions should be acknowledged upon receipt by display', function() {
+  });
+  it('directions should be acknowledged upon receipt by display', function() {
 
-//   });
-// });
+  });
+});

@@ -32,6 +32,9 @@ app.post('/incoming', displays.handleIncomingData);
 // handle when a display connects or disconnects
 io.on('connection', displays.handleConnection);
 
+io.set('heartbeat timeout 90000');
+io.set('heartbeat interval 30000');
+
 http.listen(PORT, function() {
   console.log(`listening on *:${PORT}`);
 });
