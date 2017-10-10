@@ -9,7 +9,10 @@ const express = require('express');
 const morgan = require('morgan'); /* eslint no-unused-vars: off */
 const app = express();
 const http = require('http').Server(app); /* eslint new-cap: off */
-const io = require('socket.io')(http);
+const io = require('socket.io')(http, {
+  pingInterval: 4000,
+  pingTimeout: 12000,
+});
 const bodyParser = require('body-parser');
 
 const PORT = process.env.PORT || 3000;
@@ -31,9 +34,6 @@ app.post('/incoming', displays.handleIncomingData);
 
 // handle when a display connects or disconnects
 io.on('connection', displays.handleConnection);
-
-io.set('heartbeat timeout 90000');
-io.set('heartbeat interval 30000');
 
 http.listen(PORT, function() {
   console.log(`listening on *:${PORT}`);
