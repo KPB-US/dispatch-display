@@ -4,7 +4,7 @@
   "description": "display dispatch information on screen",
   "main": "server.js",
   "scripts": {
-    "test": "mocha spec/*.spec.js"
+    "test": "NODE_ENV=test mocha spec/*.spec.js"
   },
   "repository": {
     "type": "git",

@@ -4,7 +4,7 @@ const chai = require('chai');
 const should = chai.should();
 const chaiHttp = require('chai-http');
 const stations = require('../lib/stations');
-// const app = require('../server');
+const app = require('../server');
 
 // set up our test stations
 stations.STATIONS.splice(0, stations.STATIONS.length);
@@ -23,7 +23,6 @@ describe('call logs', function() {
     // .get('/')
     // .end(function(err, res) {
     //   if (err) return done(err);
-
     //   res.should.have.status(200);
        done();
     // });
