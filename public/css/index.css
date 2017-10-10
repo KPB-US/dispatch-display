@@ -127,7 +127,7 @@ body {
 /* location details */
 
 .location-details {
-  margin-top: 1vh;
+  margin: 1vh;
   text-align: center;
 }
 .location {

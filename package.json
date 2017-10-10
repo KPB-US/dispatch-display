@@ -4,7 +4,7 @@
   "description": "display dispatch information on screen",
   "main": "server.js",
   "scripts": {
-    "test": "mocha server.spec.js"
+    "test": "mocha spec/*.spec.js"
   },
   "repository": {
     "type": "git",
@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "chai": "^4.1.2",
+    "chai-http": "^3.0.0",
     "eslint": "^4.7.1",
     "eslint-config-google": "^0.9.1",
     "mocha": "^4.0.0",
