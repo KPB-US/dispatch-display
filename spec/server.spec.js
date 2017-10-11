@@ -2,6 +2,7 @@
 
 const chai = require('chai');
 const should = chai.should();
+const expect = chai.expect;
 const chaiHttp = require('chai-http');
 const stations = require('../lib/stations');
 const app = require('../server');
@@ -17,20 +18,29 @@ chai.use(chaiHttp);
 
 // https://scotch.io/tutorials/test-a-node-restful-api-with-mocha-and-chai
 
-describe('call logs', function() {
-  it('should render logs for station requesting them', function(done) {
+describe('displays', function() {
+
+  after(function(done) {
+    // hangs if we dont close
+    app.close();
+    done();
+  });
+
+  it('should obtain index page', function(done) {
     chai.request(app)
     .get('/')
     .end(function(err, res) {
       if (err) return done(err);
       res.should.have.status(200);
-      res.should.be.json();
+      expect(res).to.be.html;
       done();
     });
   });
-});
 
-describe('sockets', function() {
+  it('should request call logs', function() {
+    
+  });
+    
   it('should allow ip matched displays', function() {
 
   });

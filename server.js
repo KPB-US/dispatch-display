@@ -39,4 +39,4 @@ http.listen(PORT, function() {
   console.log(`listening on *:${PORT}`);
 });
 
-module.exports = app; // for testing
+module.exports = http; // for testing
