@@ -101,8 +101,11 @@ describe('displays', function() {
     displays.handleConnection(socket);
     socket.emit.calledWith('call').should.be.true;
     let calls = 0;
-    for (let i = 0; i < socket.emit.args; i++) {
+console.log('--------------------------- socket.emit.args', socket.emit.args);
+    for (let i = 0; i < socket.emit.args.length; i++) {
+console.log('--------------------------------------------checking ', socket.emit.args[i][0]);
       if (socket.emit.args[i][0] == 'call') {
+        console.log('here is the call::::::', socket.emit.args[i][1]);
         if (socket.emit.args[i][1].callData.callType != '--expired--') {
           calls = calls + 1;
         }
