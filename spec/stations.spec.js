@@ -5,7 +5,7 @@ const stations = require('../lib/stations');
 
 // set up our test stations
 stations.STATIONS.splice(0, stations.STATIONS.length);
-stations.STATIONS.concat( [
+Array.prototype.push.apply(stations.STATIONS, [
   {id: 'MESA', lat: 59.74515, lng: -151.258885, ip_match_regex: /192\.168\.1\.[0-9]+/},
   {id: 'NSA', lat: 59.74515, lng: -151.258885, ip_match_regex: /192\.168\.3\.[0-9]+/},
 ]);

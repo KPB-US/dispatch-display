@@ -7,6 +7,8 @@ const chaiHttp = require('chai-http');
 const stations = require('../lib/stations');
 const app = require('../server');
 
+chai.use(chaiHttp);
+
 // set up our test stations
 stations.STATIONS.splice(0, stations.STATIONS.length);
 stations.STATIONS.concat( [
@@ -14,19 +16,14 @@ stations.STATIONS.concat( [
   {id: 'NSA', lat: 59.74515, lng: -151.258885, ip_match_regex: /192\.168\.3\.[0-9]+/},
 ]);
 
-chai.use(chaiHttp);
-
-// https://scotch.io/tutorials/test-a-node-restful-api-with-mocha-and-chai
-
-describe('displays', function() {
-
+describe('server', function() {
   after(function(done) {
     // hangs if we dont close
     app.close();
     done();
   });
 
-  it('should obtain index page', function(done) {
+  it('should respond with index page', function(done) {
     chai.request(app)
     .get('/')
     .end(function(err, res) {
@@ -35,37 +32,5 @@ describe('displays', function() {
       expect(res).to.be.html;
       done();
     });
-  });
-
-  it('should request call logs', function() {
-    
-  });
-    
-  it('should allow ip matched displays', function() {
-
-  });
-  it('should not allow displays with unmatched ips', function() {
-
-  });
-  it('should track connected displays', function() {
-
-  });
-  it('should allow multiple displays at same station', function() {
-
-  });
-  it('should stop tracking disconnected displays', function() {
-
-  });
-  it('call should go to all connected displays for station', function() {
-
-  });
-  it('call should be acknowledged upon receipt by display', function() {
-
-  });
-  it('directions should be acknowledged upon receipt by display', function() {
-
-  });
-  it('directions should be acknowledged upon receipt by display', function() {
-
   });
 });

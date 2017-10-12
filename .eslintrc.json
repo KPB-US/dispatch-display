@@ -8,7 +8,7 @@
     "node": true
   },
   "rules": {
-    "max-len": ["warn", 120],
+    "max-len": ["warn", 160],
     "no-console": "off"
   }
 }
