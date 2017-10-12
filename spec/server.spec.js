@@ -1,7 +1,6 @@
 /* eslint-env node, mocha */
 
 const chai = require('chai');
-const should = chai.should();
 const expect = chai.expect;
 const chaiHttp = require('chai-http');
 const stations = require('../lib/stations');
@@ -28,7 +27,7 @@ describe('server', function() {
     .get('/')
     .end(function(err, res) {
       if (err) return done(err);
-      res.should.have.status(200);
+      expect(res).to.have.status(200);
       expect(res).to.be.html;
       done();
     });
