@@ -1,16 +1,14 @@
 /* eslint-env node, mocha */
 
+require('dotenv').config();
+const logger = require('../lib/logger');
+
 const chai = require('chai');
 const sinon = require('sinon');
 const expect = chai.expect;
-// const chaiHttp = require('chai-http');
 
 const stations = require('../lib/stations');
 const displays = require('../lib/displays');
-
-const QUIET_LOGS = true;
-
-// chai.use(chaiHttp);
 
 // set up our test stations
 stations.STATIONS.splice(0, stations.STATIONS.length);
@@ -18,16 +16,6 @@ Array.prototype.push.apply(stations.STATIONS, [
   {id: 'MESA', lat: 59.74515, lng: -151.258885, ip_match_regex: /192\.168\.1\.[0-9]+/},
   {id: 'NSA', lat: 59.74515, lng: -151.258885, ip_match_regex: /192\.168\.3\.[0-9]+/},
 ]);
-
-/**
- * write to console
- * @param {...*} args 
- */
-function log(...args) {
-  if (!QUIET_LOGS) {
-    console.log(args);
-  }
-}
 
 /**
  * returns a stubbed socket
@@ -54,14 +42,14 @@ function createSocket(ip) {
     onHandlers: {},
   };
   sinon.stub(socket, 'emit').callsFake(function(...args) {
-    log('emit', args);
+    logger.verbose('emit', args);
     // if there was a callback then run it
     if (typeof args[2] == 'function') {
       args[2]();
     }
   });
   sinon.stub(socket, 'on').callsFake(function(...args) {
-    log('on', args);
+    logger.verbose('on', args);
     socket.onHandlers[args[0]] = args[1];
   });
 
@@ -100,11 +88,11 @@ function createResponse() {
     send: function() { },
   };
   sinon.stub(res, 'status').callsFake(function(...args) {
-    log('status', args);
+    logger.verbose('status', args);
     return res;
   });
   sinon.stub(res, 'send').callsFake(function(...args) {
-    log('send', args);
+    logger.verbose('send', args);
     return res;
   });
 
@@ -334,17 +322,17 @@ describe('displays', function() {
     expect(displays.callHistory.length).to.equal(0);
   });
 
-  it('should not fetch location when none is provided', function(done) {
+  it('should not fetch directions when no location is provided', function(done) {
     chai.assert(false, 'needs written');
     done();
   });
 
-  it('should fetch location when one is provided', function(done) {
+  it('should fetch direction when a location is provided', function(done) {
     chai.assert(false, 'needs written');
     done();
   });
 
-  it('should not fetch location if it has already been fetched', function(done) {
+  it('should not fetch directions if it has already been fetched', function(done) {
     chai.assert(false, 'needs written');
     done();
   });

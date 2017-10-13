@@ -4,7 +4,7 @@
 
 require('dotenv').config();
 const displays = require('./lib/displays');
-
+const logger = require('./lib/logger');
 const express = require('express');
 const morgan = require('morgan'); /* eslint no-unused-vars: off */
 const app = express();
@@ -36,7 +36,7 @@ app.post('/incoming', displays.handleIncomingData);
 io.on('connection', displays.handleConnection);
 
 http.listen(PORT, function() {
-  console.log(`listening on *:${PORT}`);
+  logger.info(`listening on *:${PORT}`);
 });
 
 module.exports = http; // for testing
