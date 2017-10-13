@@ -32,4 +32,8 @@ describe('server', function() {
       done();
     });
   });
+
+  // what happens when settings don't exist?
+
+  // nightwatch for e2e testing?
 });

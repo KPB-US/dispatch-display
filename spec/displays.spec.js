@@ -90,6 +90,27 @@ function createCall(station) {
   return call;
 }
 
+/**
+ * return stubbed response object
+ * @return {response}
+ */
+function createResponse() {
+  let res = {
+    status: function() { },
+    send: function() { },
+  };
+  sinon.stub(res, 'status').callsFake(function(...args) {
+    log('status', args);
+    return res;
+  });
+  sinon.stub(res, 'send').callsFake(function(...args) {
+    log('send', args);
+    return res;
+  });
+
+  return res;
+}
+
 describe('displays', function() {
   beforeEach(function resetDisplays() {
     // reset display call history and tracked display connections
@@ -229,18 +250,102 @@ describe('displays', function() {
     let req = {
       body: call,
     };
-    let res = {
-      status: function() { },
-      send: function() { },
-    };
-    sinon.stub(res, 'status').callsFake(function(...args) {
-      log('status', args);
-    });
-    sinon.stub(res, 'send').callsFake(function(...args) {
-      log('send', args);
-    });
+    let res = createResponse();
     displays.handleIncomingData(req, res);
     socket.onHandlers['calls-log-query']();
     expect(socket.emit.calledWith('calls-log')).to.be.true;
+  });
+
+  it('should update call when same call comes through again', function() {
+    const socket = createSocket();
+    const call = createCall('MESA');
+    call.location = String.Empty;
+    const res = createResponse();
+
+    const prior = call.ccText;
+    displays.handleConnection(socket);
+    let req = {
+      body: call,
+    };
+    displays.handleIncomingData(req, res);
+    expect(displays.callHistory.length).to.equal(1);
+
+    const call2 = createCall('MESA');
+    call2.ccText = 'foobar';
+    let req2 = {
+      body: call2,
+    };
+    const res2 = createResponse();
+    req.body = call2;
+    displays.handleIncomingData(req2, res2);
+    expect(displays.callHistory.length).to.equal(1);
+    expect(displays.callHistory[0].callData.ccText).to.not.equal(prior);
+  });
+
+  it('should send 400 Bad Request when call cannot be parsed', function() {
+    const socket = createSocket();
+    const call = {foo: 'bar'};
+    call.location = String.Empty;
+
+    displays.handleConnection(socket);
+    let req = {
+      body: call,
+    };
+    let res = createResponse();
+    displays.handleIncomingData(req, res);
+    expect(res.status.calledWith(400)).to.be.true;
+    expect(displays.callHistory.length).to.equal(0);
+  });
+
+  it('call history should not exceed call history limit', function() {
+    const socket = createSocket();
+    displays.handleConnection(socket);
+
+    const res = createResponse();
+    const call = createCall('MESA');
+    call.location = String.Empty;
+    let req = {
+      body: call,
+    };
+    for (let i = 0; i < displays.CALL_HISTORY_LIMIT; i++) {
+      call.callNumber = i.toString();
+      displays.handleIncomingData(req, res);
+    }
+    expect(displays.callHistory.length).to.equal(displays.CALL_HISTORY_LIMIT);
+    // add one more to go over
+    call.callNumber = displays.CALL_HISTORY_LIMIT + 1;
+    displays.handleIncomingData(req, res);
+    expect(displays.callHistory.length).to.equal(displays.CALL_HISTORY_LIMIT);
+  });
+
+  it('should discard calls for unhandled stations', function() {
+    const socket = createSocket();
+    const call = createCall('Q*BERT');
+    call.location = String.Empty;
+
+    displays.handleConnection(socket);
+    let req = {
+      body: call,
+    };
+    let res = createResponse();
+    displays.handleIncomingData(req, res);
+    expect(res.status.calledWith(200)).to.be.true;
+    expect(res.send.args[0][0]).to.include('Not configured');
+    expect(displays.callHistory.length).to.equal(0);
+  });
+
+  it('should not fetch location when none is provided', function(done) {
+    chai.assert(false, 'needs written');
+    done();
+  });
+
+  it('should fetch location when one is provided', function(done) {
+    chai.assert(false, 'needs written');
+    done();
+  });
+
+  it('should not fetch location if it has already been fetched', function(done) {
+    chai.assert(false, 'needs written');
+    done();
   });
 });
