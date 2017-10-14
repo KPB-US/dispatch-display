@@ -3,6 +3,8 @@
 require('dotenv').config();
 const logger = require('../lib/logger');
 
+// logger.level = 'verbose';
+
 const chai = require('chai');
 const sinon = require('sinon');
 const expect = chai.expect;
@@ -323,17 +325,62 @@ describe('displays', function() {
   });
 
   it('should not fetch directions when no location is provided', function(done) {
-    chai.assert(false, 'needs written');
+    const socket = createSocket();
+    const call = createCall('MESA');
+    call.location = String.Empty;
+
+    displays.handleConnection(socket);
+    let req = {
+      body: call,
+    };
+    let res = createResponse();
+    displays.handleIncomingData(req, res);
+    expect(socket.emit.calledWith('call')).to.be.true;
+    expect(socket.emit.calledWith('directions')).to.be.false;
     done();
   });
 
   it('should fetch direction when a location is provided', function(done) {
-    chai.assert(false, 'needs written');
-    done();
+    const socket = createSocket();
+    const call = createCall('MESA');
+
+    displays.handleConnection(socket);
+    let req = {
+      body: call,
+    };
+    let res = createResponse();
+    displays.handleIncomingData(req, res)
+      .then(function() {
+        expect(socket.emit.calledWith('call')).to.be.true;
+        expect(socket.emit.calledWith('directions')).to.be.true;
+        expect(socket.emit.args[2][1].cached).to.be.false;
+        done();
+      });
   });
 
   it('should not fetch directions if it has already been fetched', function(done) {
-    chai.assert(false, 'needs written');
-    done();
+    const socket = createSocket();
+    const call = createCall('MESA');
+
+    displays.handleConnection(socket);
+    let req = {
+      body: call,
+    };
+    let res = createResponse();
+    displays.handleIncomingData(req, res)
+      .then(function() {
+        const call2 = createCall('MESA');
+        let req2 = {
+          body: call2,
+        };
+        let res2 = createResponse();
+        return displays.handleIncomingData(req2, res2);
+      })
+      .then(function() {
+        expect(socket.emit.calledWith('call')).to.be.true;
+        expect(socket.emit.calledWith('directions')).to.be.true;
+        expect(socket.emit.args[4][1].cached).to.be.true;
+        done();
+      });
   });
 });
