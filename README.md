@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/KPB-US/dispatch-display.svg?branch=master)](https://travis-ci.org/KPB-US/dispatch-display.svg?branch=master)
 [![Coverage Status](https://coveralls.io/repos/KPB-US/dispatch-display/badge.svg?branch=master)](https://coveralls.io/r/KPB-US/dispatch-display?branch=master)
 
 # dispatch-display
