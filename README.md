@@ -1,3 +1,5 @@
+[![Coverage Status](https://coveralls.io/repos/KPB-US/dispatch-display/badge.svg?branch=master)](https://coveralls.io/r/KPB-US/dispatch-display?branch=master)
+
 # dispatch-display
 Displays 911 dispatch details, timer, and map in the station. Cycles through multiple active calls.  Displays a call log when no calls are active.
 

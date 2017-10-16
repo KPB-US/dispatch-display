@@ -4,7 +4,9 @@
   "description": "display dispatch information on screen",
   "main": "server.js",
   "scripts": {
-    "test": "NODE_ENV=test mocha spec/*.spec.js"
+    "testonly": "NODE_ENV=test mocha spec/*.spec.js",
+    "test": "NODE_ENV=test ./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha spec/*.spec.js",
+    "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls"
   },
   "repository": {
     "type": "git",
@@ -28,8 +30,10 @@
   "devDependencies": {
     "chai": "^4.1.2",
     "chai-http": "^3.0.0",
+    "coveralls": "^3.0.0",
     "eslint": "^4.7.1",
     "eslint-config-google": "^0.9.1",
+    "istanbul": "^0.4.5",
     "mocha": "^4.0.0",
     "morgan": "^1.8.2",
     "sinon": "^4.0.1"
