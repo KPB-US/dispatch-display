@@ -5,45 +5,89 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Dispatch Display Status</title>
-  <script src="https://unpkg.com/vue"></script>
+  <script src="js/vue.js"></script>
   <link rel="stylesheet" href="css/status.css">
 </head>
 <body>
   <div id="status">
-    <ul class="stations">
-      <li v-for="entry in results.directory">
-        <div class="name">{{entry.id}}</div>
-        <div class="address">{{entry.address}}</div>
-        <div class="since">{{new Date(entry.since).toLocaleDateString()}} {{new Date(entry.since).toLocaleTimeString()}}</div>
-        <div class="posts">
-          <ul class="posts">
-            <li v-for="post in entry.posts">
-              <div v-if="post.type == 'call'">
-                <div class="cell call-number">{{post.callNumber}}</div>
-                <div class="cell call-sent">{{new Date(post.callSent).toLocaleDateString()}}</div>
-                <div class="cell call-ack">{{new Date(post.callAck).toLocaleTimeString()}}</div>
-                <div class="cell directions-sent">{{new Date(post.directionsSent).toLocaleDateString()}}</div>
-                <div class="cell directions-ack">{{new Date(post.directionsAck).toLocaleTimeString()}}</div>
-              </div>
-              <div v-else-if="post.type == 'callslog'">
-                <div class="cell call-number"></div>
-                <div class="cell call-sent">{{new Date(post.callslogSent).toLocaleDateString()}}</div>
-                <div class="cell call-ack">{{new Date(post.callslogAck).toLocaleTimeString()}}</div>
-                <div class="cell directions-sent"></div>
-                <div class="cell directions-ack"></div>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </li>
-    </ul>
+    <div class="stations">
+      <div v-for="entry in results.directory">
+        <table class="posts">
+          <thead>
+            <tr>
+              <th colspan="5">
+                <div class="name">{{entry.id}}</div>
+                <div class="address">{{entry.address}}</div>
+                <div class="since">{{new Date(entry.since).toLocaleDateString()}} {{new Date(entry.since).toLocaleTimeString()}}</div>
+              </th>
+            </tr>
+            <tr v-if="entry.posts.length > 0">
+              <th>Call #</th>
+              <th>Call Sent</th>
+              <th>Call Ack</th>
+              <th>Directions Sent</th>
+              <th>Directions Ack</th>
+            </tr>
+            <tr v-else>
+                <th colspan="5" class="no-calls">No calls yet.</th>
+              </tr>
+            </thead>
+          <tbody>
+            <tr v-for="post in entry.posts">
+              <template v-if="post.type == 'call'">
+                <td class="call-number">{{post.callNumber}}</td>
+                <td class="call-sent">{{new Date(post.callSent).toLocaleDateString()}}</td>
+                <td class="call-ack">{{new Date(post.callAck).toLocaleTimeString()}}</td>
+                <td class="directions-sent">{{new Date(post.directionsSent).toLocaleDateString()}}</td>
+                <td class="directions-ack">{{new Date(post.directionsAck).toLocaleTimeString()}}</td>
+              </template>
+              <template v-else-if="post.type == 'callslog'">
+                <td class="call-number">Logs</td>
+                <td class="call-sent">{{new Date(post.callslogSent).toLocaleDateString()}}</td>
+                <td class="call-ack">{{new Date(post.callslogAck).toLocaleTimeString()}}</td>
+                <td class="directions-sent"></td>
+                <td class="directions-ack"></td>
+              </template>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="history">
+      <table v-if="results.callHistory.length > 0">
+        <thead>
+          <tr>
+            <th colspan="6">Call History</th>
+          </tr>
+          <tr>
+            <th>Call #</th>
+            <th>Station</th>
+            <th>Received</th>
+            <th>Type</th>
+            <th>Dispatch Code</th>
+            <th>Directions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="call in results.callHistory">
+            <td class="call-number">{{call.callNumber}}</td>
+            <td class="call-station">{{call.callData.station}}</td>
+            <td class="call-received">{{new Date(call.receivedDate).toLocaleDateString()}} {{new Date(call.receivedDate).toLocaleTimeString()}}</td>
+            <td class="call-type">{{call.callData.callType}}</td>
+            <td class="call-dispatch-code">{{call.callData.dispatchCode}}</td>
+            <td class="call-directions">{{call.directionsData.response.json.status}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+        
   </div>
 </body>
 <script>
   fetch('/status')
     .then(results => results.json())
     .then(results => {
-console.log(results);
       var v = new Vue({
         el: '#status',
         data: {
