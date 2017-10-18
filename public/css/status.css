@@ -1,52 +1,49 @@
-ul.posts li {
-  display: table-row;
-  border: solid 1px lightgray;
-  
-}
-
-ul.posts {
-  border: solid 1px lightgray;
-}
-
-ul.posts li div.cell {
-  display: table-cell;
-  min-width: 6em;
-  text-align: center;
-  padding: .5em;
-  border-top: solid 1px lightgray;
-}
-
-ul.posts li div.cell:not(:first-child) {
-  border-left: solid 1px lightgray;
-}
-
-ul.posts {
-  display: table;
-  padding-left: 0;
-}
-
 ul.stations {
   list-style-type: none;
 }
 
-ul.stations li {
-}
-
 .name {
   font-weight: bold;
-  display: inline-block;
+  float: left;
 }
 
 .address {
-  font-style: italic;
-  display: inline-block;
-  color: gray;
+  font-style: bold;
+  float: left;
+  padding-left: 1em;
+}
+
+.no-calls {
+  font-weight: normal;
+  text-align: left;
 }
 
 .since {
-  display: inline-block;
+  padding-left: 1em;
+  float: right;
+  color: gray;
 }
 
-div.posts {
+div.history {
+  margin-top: 1em;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+th, td {
+  border: solid 1px lightgray;
   padding: .5em;
+  margin: 0;
+  text-align: center;
+  vertical-align: middle;
+}
+
+tbody tr:nth-child(even) {
+  background-color: whitesmoke;
+}
+
+thead tr {
+  background-color: #f9f9ff;
 }
