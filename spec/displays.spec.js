@@ -242,8 +242,8 @@ describe('displays', function() {
     };
     let res = createResponse();
     displays.handleIncomingData(req, res);
-    socket.onHandlers['calls-log-query']();
-    expect(socket.emit.calledWith('calls-log')).to.be.true;
+    socket.onHandlers['callslog-query']();
+    expect(socket.emit.calledWith('callslog')).to.be.true;
   });
 
   it('should update call when same call comes through again', function() {

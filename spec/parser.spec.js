@@ -49,6 +49,12 @@ describe('parse', function() {
     expect(data.dispatchCode).to.equal('C');
   });
 
+  it('should default to "?" if dispatchCode missing', function() {
+    sample.dispatchCode = '';
+    const data = parser.parse(sample);
+    expect(data.dispatchCode).to.equal('?');
+  });
+
   it('should remove trailing zeros from latlng', function() {
     let body = JSON.parse(JSON.stringify(sample));
     body.location = '60.12340000000,-151.93840000000';

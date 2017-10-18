@@ -36,12 +36,12 @@
   setInterval(function() {
     // if there are calls hide the log, otherwise, show the log
     if (calls.length > 0) {
-      $('.calls-log').addClass('hidden');
+      $('.callslog').addClass('hidden');
     } else {
-      if ($('.calls-log').hasClass('hidden')) {
-        socket.emit('calls-log-query');
-        $('.calls-log').empty();
-        $('.calls-log').removeClass('hidden');
+      if ($('.callslog').hasClass('hidden')) {
+        socket.emit('callslog-query');
+        $('.callslog').empty();
+        $('.callslog').removeClass('hidden');
       }
     }
 
@@ -309,13 +309,13 @@
    * data from websocket from server
    * @param {array} calls array of call data for this station
    */
-  socket.on('calls-log', function(data, ackHandler) {
+  socket.on('callslog', function(data, ackHandler) {
     // acknowledge that we received the data
     if (ackHandler) ackHandler(true);
 
-    console.log('got calls-log', data);
+    console.log('got callslog', data);
     const rows = data.calls.map((entry) => `<tr><td>${entry.callData.callDateTime}</td><td>${entry.callData.callType}</td><td>${entry.callData.dispatchCode}</td><td>${entry.callData.location}</td></tr>`)
       .join('');
-    $('.calls-log').html('<table>' + rows + '</table>');
+    $('.callslog').html('<table>' + rows + '</table>');
   });
 })();

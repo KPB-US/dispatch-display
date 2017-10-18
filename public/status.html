@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Dispatch Display Status</title>
+  <script src="https://unpkg.com/vue"></script>
+  <link rel="stylesheet" href="css/status.css">
+</head>
+<body>
+  <div id="status">
+    <ul class="stations">
+      <li v-for="entry in results.directory">
+        <div class="name">{{entry.id}}</div>
+        <div class="address">{{entry.address}}</div>
+        <div class="since">{{new Date(entry.since).toLocaleDateString()}} {{new Date(entry.since).toLocaleTimeString()}}</div>
+        <div class="posts">
+          <ul class="posts">
+            <li v-for="post in entry.posts">
+              <div v-if="post.type == 'call'">
+                <div class="cell call-number">{{post.callNumber}}</div>
+                <div class="cell call-sent">{{new Date(post.callSent).toLocaleDateString()}}</div>
+                <div class="cell call-ack">{{new Date(post.callAck).toLocaleTimeString()}}</div>
+                <div class="cell directions-sent">{{new Date(post.directionsSent).toLocaleDateString()}}</div>
+                <div class="cell directions-ack">{{new Date(post.directionsAck).toLocaleTimeString()}}</div>
+              </div>
+              <div v-else-if="post.type == 'callslog'">
+                <div class="cell call-number"></div>
+                <div class="cell call-sent">{{new Date(post.callslogSent).toLocaleDateString()}}</div>
+                <div class="cell call-ack">{{new Date(post.callslogAck).toLocaleTimeString()}}</div>
+                <div class="cell directions-sent"></div>
+                <div class="cell directions-ack"></div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </li>
+    </ul>
+  </div>
+</body>
+<script>
+  fetch('/status')
+    .then(results => results.json())
+    .then(results => {
+console.log(results);
+      var v = new Vue({
+        el: '#status',
+        data: {
+          results,
+        }
+      });
+    });
+  setTimeout(() => {
+    window.location = "/status.html";
+  }, 120000);
+</script>
+</html>

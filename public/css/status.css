@@ -1,0 +1,52 @@
+ul.posts li {
+  display: table-row;
+  border: solid 1px lightgray;
+  
+}
+
+ul.posts {
+  border: solid 1px lightgray;
+}
+
+ul.posts li div.cell {
+  display: table-cell;
+  min-width: 6em;
+  text-align: center;
+  padding: .5em;
+  border-top: solid 1px lightgray;
+}
+
+ul.posts li div.cell:not(:first-child) {
+  border-left: solid 1px lightgray;
+}
+
+ul.posts {
+  display: table;
+  padding-left: 0;
+}
+
+ul.stations {
+  list-style-type: none;
+}
+
+ul.stations li {
+}
+
+.name {
+  font-weight: bold;
+  display: inline-block;
+}
+
+.address {
+  font-style: italic;
+  display: inline-block;
+  color: gray;
+}
+
+.since {
+  display: inline-block;
+}
+
+div.posts {
+  padding: .5em;
+}
