@@ -11,7 +11,7 @@
   const calls = []; // keep track of currently active calls
 
 /**
- * update the index
+ * update the .calls-index element with which page (call) we are displaying
  *
  * @param {string} x call index
  * @param {string} y calls count
@@ -43,6 +43,7 @@
         $('.callslog').empty();
         $('.callslog').removeClass('hidden');
       }
+      $('div#time').text(new Date().toLocaleTimeString());
     }
 
     let urgentCall = calls.find((entry) => entry.visibleAt == -1);
@@ -314,8 +315,12 @@
     if (ackHandler) ackHandler(true);
 
     console.log('got callslog', data);
-    const rows = data.calls.map((entry) => `<tr><td>${entry.callData.callDateTime}</td><td>${entry.callData.callType}</td><td>${entry.callData.dispatchCode}</td><td>${entry.callData.location}</td></tr>`)
-      .join('');
-    $('.callslog').html('<table>' + rows + '</table>');
+    let html = '<div id="time"></div>';
+    if (data.calls.length > 0) {
+      const rows = data.calls.map((entry) => `<tr><td>${entry.callData.callDateTime}</td><td>${entry.callData.callType}</td><td>${entry.callData.dispatchCode}</td><td>${entry.callData.location}</td></tr>`)
+        .join('');
+      html = '<table>' + rows + '</table>';
+    }
+    $('.callslog').html(html);
   });
 })();
