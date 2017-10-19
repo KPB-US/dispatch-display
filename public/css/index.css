@@ -203,3 +203,13 @@ body {
   opacity: .7;
   font-size: 1vw;
 }
+
+div#time {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  text-align: right;
+  font-size: 24vh;
+  font-family: fixed;
+  padding-right: 1em;
+}
