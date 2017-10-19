@@ -30,7 +30,7 @@ app.get('/', function(req, res) {
 });
 // handle incoming data from 911 system
 app.post('/incoming', displays.handleIncomingData);
-app.get('/status', displays.showStatus);
+app.get('/status', displays.handleStatus);
 
 // handle when a display connects or disconnects
 io.on('connection', displays.handleConnection);
