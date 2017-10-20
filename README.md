@@ -15,8 +15,9 @@ Displays 911 dispatch details, timer, and map in the station. Cycles through mul
 - DISPLAY_TTL
 - CALL_HISTORY_LIMIT
 - ADDRESS_SUFFIX (for helping GoogleMaps find the location in your area)
+- LOG_LEVEL
 2. Update the list of `STATIONS` in server.js.
-3. Update the `parseFrom911` function in server.js to parse your JSON data into the object used by dispatch-display:
+3. Update the `parse` function in lib/parser.js to parse your JSON data into the object used by dispatch-display:
 ```
 {
   callNumber: null,
@@ -34,10 +35,14 @@ Displays 911 dispatch details, timer, and map in the station. Cycles through mul
   venue: null,
 }
 ```
+4. Update the DISPATCH_DISPLAY_SERVER at the top of the pi/online_check.html so it can redirect to the server when a connection is detected.
+5. Update the ONLINE_CHECK_URL at the top of the index.js file to point to the localhost server port that will serve the online_check.html file.
+6. Update the rollbar token at the top of the index.html file.
+
 ## production
 
-1. set up your nodejs server to run server.js
-2. Set up your RasperryPi 3's with debian jessie to point chromium at your server http://server.
+1. Set up your nodejs server to run server.js
+2. Set up your RasperryPi's with debian jessie to point chromium at the file location of the online_check.html file.  This file is served by `python -m SimpleHTTPServer -p 8000` from the /home/signage/pi folder.  If the network is not connected then a message will be displayed stating such.  If the network is connected then it will redirect to the dispatch server url.  When the dispatch server display page is idle (not actively showing a call) and the network does down, the browser will be redirected to the locally served online-check.html page also.  Your signage user on the pi could also be set to autostart the pi/signage.sh which starts the local server and launches chromium in kiosk mode.
 3. Get your 911 system (or an intermediary) to post calls to your server at http://server/incoming.
 
 ## development
