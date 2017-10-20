@@ -46,11 +46,16 @@
       }
       $('div#time').text(new Date().toLocaleTimeString());
 
-      // if we have lost connectivity and we have an online check url then go there
-      if (!navigator.onLine && ONLINE_CHECK_URL) {
-        window.location = ONLINE_CHECK_URL;
-        return;
-      }
+      // // if we have lost connectivity and we have an online check url then go there
+      // if (!navigator.onLine && ONLINE_CHECK_URL) {
+      //   let a = document.createElement('A');
+      //   a.setAttribute('href', ONLINE_CHECK_URL);
+      //   a.style = 'display: hidden';
+      //   document.body.appendChild(a);
+      //   a.click();
+      //   // window.location = ONLINE_CHECK_URL;
+      //   return;
+      // }
     }
 
     let urgentCall = calls.find((entry) => entry.visibleAt == -1);
