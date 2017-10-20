@@ -11,11 +11,9 @@ const v = new Vue({
   },
   methods: {
     updateStatus: function() {
-      console.log('fetching status');
       fetch('/status')
       .then(results => results.json())
       .then((results) => {
-        console.log('updating status');
         this.results = results;
       });
     },

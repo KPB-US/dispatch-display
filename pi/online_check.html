@@ -1,0 +1,75 @@
+<html>
+  <head>
+    <title>Dipatch Display - Connectivity Check</title>
+    <!-- this is intented to be the first page that the pi points to locally -->
+    <!-- belongs in /home/signage/online_check.html -->
+    <style>
+      * {
+        font-size: 5vw;
+        color: #777;
+      }
+      #container {
+        height: 100vh;
+        display: table-cell;
+        vertical-align: middle;
+      }
+      #message {
+        display: inline-block;
+        width: 100vw;
+        padding: 2vh;
+        text-align: center;
+      }
+      #ip {
+        display: inline-block;
+        width: 100vw;
+        padding: 2vh;
+        font-weight: bold;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <div id="message"></div>
+      <div id="ip"></div>
+    </div>
+    <script>
+      /**
+       * if online, redirect to dispatch display server, otherwise
+       * report offline status and show ip address
+       * @return {boolean} true if online, false otherwise
+       */
+      function checkOnlineStatus() {
+        if (navigator.onLine) {
+          window.location = 'http://admwebnodejs1.kpb.us';
+          return true;
+        }
+        else {
+          // add the offline notice
+          document.getElementById('ip').textContent = '';
+          document.getElementById('message').textContent = 'This display is currently offline and cannot reach the network.';
+          // lookup the local ip address if we can
+          // https://stackoverflow.com/questions/20194722/can-you-get-a-users-local-lan-ip-address-via-javascript
+          window.RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;   //compatibility for firefox and chrome
+          var pc = new RTCPeerConnection({ iceServers: [] }), noop = function () { };
+          pc.createDataChannel("");    //create a bogus data channel
+          pc.createOffer(pc.setLocalDescription.bind(pc), noop);    // create offer and set local description
+          pc.onicecandidate = function (ice) {  //listen for candidate events
+            if (!ice || !ice.candidate || !ice.candidate.candidate) return;
+            var myIP = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/.exec(ice.candidate.candidate)[1];
+            // add the ip address notice
+            document.getElementById('ip').textContent = myIP;
+            pc.onicecandidate = noop;
+          };
+
+        }
+        return false;
+      }
+
+      // check the online status, and if not connected check it again in 10 seconds
+      if (!checkOnlineStatus()) {
+        setInterval(checkOnlineStatus, 10000);
+      }
+    </script>
+  </body>
+</html>

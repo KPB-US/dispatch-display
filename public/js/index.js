@@ -4,6 +4,7 @@
 (function() {
   'use strict';
 
+  const ONLINE_CHECK_URL = 'file:///home/signage/online_check.html';
   const CALL_ACTIVE_SECS = 60 * 10; // time the call is active after which it should disappear
   const SWITCH_AFTER_SECS = 5; // how quickly we should switch between active calls
 
@@ -44,6 +45,12 @@
         $('.callslog').removeClass('hidden');
       }
       $('div#time').text(new Date().toLocaleTimeString());
+
+      // if we have lost connectivity and we have an online check url then go there
+      if (!navigator.onLine && ONLINE_CHECK_URL) {
+        window.location = ONLINE_CHECK_URL;
+        return;
+      }
     }
 
     let urgentCall = calls.find((entry) => entry.visibleAt == -1);
