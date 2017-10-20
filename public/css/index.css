@@ -7,8 +7,6 @@ body {
   font-family: 'Oswald', sans-serif;
 }
 
-.calls {
-}
 .calls-index {
   position:absolute;
   top: 0;
@@ -18,7 +16,7 @@ body {
   z-index: 1000;
   font-size: 2vw;
   padding-left: 1vw;
-  color: #0;
+  color: #000;
 }
 .calls-index i {
   padding: 0;
@@ -62,8 +60,6 @@ body {
   /*left: -1000vw;
   opacity: 0;*/
 }
-.hidden {
-}
 .col-left {
   vertical-align: top;
   display: table-cell;
@@ -80,7 +76,6 @@ body {
 .callslog {
   background-color: #010101;
   color: #ddd;
-  //width: 90%;
   height: 100vh;
   font-size: 2vw;
 }
@@ -103,8 +98,6 @@ body {
 
 /* time */
 
-.time-details {
-}
 .countdown {
   font-size: 17vw;
   font-weight: bold;
@@ -186,8 +179,6 @@ body {
 
 /* map */
 
-.map {
-}
 .map img {
   max-width: 100%;
   max-height: 100%;
@@ -211,5 +202,5 @@ div#time {
   text-align: right;
   font-size: 10vw;
   font-family: fixed;
-  padding-right: 1em;
+  padding-right: 1vw;
 }

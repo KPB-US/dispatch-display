@@ -5,23 +5,21 @@
     <!-- belongs in /home/signage/online_check.html -->
     <style>
       * {
-        font-size: 5vw;
+        font-size: 4vw;
         color: #777;
       }
       #container {
-        height: 100vh;
+        height: 90vh;
         display: table-cell;
         vertical-align: middle;
       }
       #message {
         display: inline-block;
-        width: 100vw;
-        padding: 2vh;
+        padding: 4vh;
         text-align: center;
       }
       #ip {
-        display: inline-block;
-        width: 100vw;
+        display: block;
         padding: 2vh;
         font-weight: bold;
         text-align: center;
@@ -34,6 +32,9 @@
       <div id="ip"></div>
     </div>
     <script>
+      // const DISPATCH_DISPLAY_SERVER='http://localhost:3000';
+      const DISPATCH_DISPLAY_SERVER='admwebnodejs1.kpb.us';
+
       /**
        * if online, redirect to dispatch display server, otherwise
        * report offline status and show ip address
@@ -41,7 +42,7 @@
        */
       function checkOnlineStatus() {
         if (navigator.onLine) {
-          window.location = 'http://admwebnodejs1.kpb.us';
+          window.location = DISPATCH_DISPLAY_SERVER;
           return true;
         }
         else {
@@ -66,9 +67,9 @@
         return false;
       }
 
-      // check the online status, and if not connected check it again in 10 seconds
+      // check the online status, and if not connected check again periodically
       if (!checkOnlineStatus()) {
-        setInterval(checkOnlineStatus, 10000);
+        setInterval(checkOnlineStatus, 5000);
       }
     </script>
   </body>
