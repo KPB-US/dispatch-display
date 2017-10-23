@@ -76,7 +76,7 @@ body {
 .callslog {
   background-color: #010101;
   color: #ddd;
-  height: 100vh;
+  /* height: 100vh; */
   font-size: 2vw;
 }
 .working {
@@ -203,4 +203,14 @@ div#time {
   font-size: 10vw;
   font-family: fixed;
   padding-right: 1vw;
+}
+
+ul.messages {
+  font-size: 4vw;
+  color: #777;
+  text-align: center;
+  list-style-type: none;
+}
+ul.messages.hidden {
+  display: none;
 }

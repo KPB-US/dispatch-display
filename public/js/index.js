@@ -38,6 +38,8 @@
     // if there are calls hide the log, otherwise, show the log
     if (calls.length > 0) {
       $('.callslog').addClass('hidden');
+      $('.messages').addClass('hidden');
+      $('.messages').empty();
     } else {
       if ($('.callslog').hasClass('hidden')) {
         socket.emit('callslog-query');
@@ -287,12 +289,6 @@
       $(callEl).find('.dispatch-code').text(data.dispatchCode);
     }
 
-    // if (data.breathing) {
-    //   $(callEl).find('.breathing').text('BREATHING: ' + data.breathing);
-    // }
-    // if (data.conscious) {
-    //   $(callEl).find('.conscious').text('CONSCIOUS: ' + data.conscious);
-    // }
     if (data.callInfo) {
       $(callEl).find('.call-info').text(data.callInfo);
     }
@@ -321,13 +317,32 @@
     // acknowledge that we received the data
     if (ackHandler) ackHandler(true);
 
-    console.log('got callslog', data);
     let html = '<div id="time"></div>';
     if (data.calls.length > 0) {
       const rows = data.calls.map((entry) => `<tr><td>${entry.callData.callDateTime}</td><td>${entry.callData.callType}</td><td>${entry.callData.dispatchCode}</td><td>${entry.callData.location}</td></tr>`)
         .join('');
       html = '<table>' + rows + '</table>';
+      $('.messages').empty();
+      $('.messages').addClass('hidden');
     }
     $('.callslog').html(html);
+  });
+
+  /**
+   * display message from the socket, such as 'remote address unmatched'
+   */
+  socket.on('message', function(data, ackHandler) {
+    // acknowledge that we received the data
+    if (ackHandler) ackHandler(true);
+
+    console.log(data);
+    if (data.match(/Welcome/)) {
+      $('.messages').addClass('hidden');
+      $('.messages').empty();
+    } else {
+      const html = '<li>' + data + '</li>';
+      $('.messages').append(html);
+      $('.messages').removeClass('hidden');
+    }
   });
 })();
