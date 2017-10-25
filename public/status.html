@@ -78,7 +78,7 @@
               <td class="call-received">{{new Date(call.receivedDate).toLocaleDateString()}} {{new Date(call.receivedDate).toLocaleTimeString()}}</td>
               <td class="call-type">{{call.callData.callType}}</td>
               <td class="call-dispatch-code">{{call.callData.dispatchCode}}</td>
-              <td class="call-directions">{{call.directionsData.response.json.status}}</td>
+              <td class="call-directions">{{directionsStatus(call)}}</td>
             </tr>
           </tbody>
         </table>
