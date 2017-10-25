@@ -57,3 +57,5 @@ typings/
 # dotenv environment variables file
 .env
 
+# nightwatch testing
+tests_output/
