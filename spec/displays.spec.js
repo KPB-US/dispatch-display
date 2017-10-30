@@ -118,12 +118,12 @@ describe('displays', function() {
     expect(socket.connected).to.be.true;
   });
 
-  it('should receive a welcome upon connect', function() {
+  it('should receive a station id upon connect', function() {
     const socket = createSocket();
 
     displays.handleConnection(socket);
-    expect(socket.emit.calledWith('message')).to.be.true;
-    expect(socket.emit.args[0][1]).to.include('Welcome');
+    expect(socket.emit.calledWith('stationid')).to.be.true;
+    expect(socket.emit.args[0][1]).to.equal('MESA');
   });
 
   it('should track connected displays', function() {
@@ -325,6 +325,7 @@ describe('displays', function() {
   });
 
   it('should not fetch directions when no location is provided', function(done) {
+    this.timeout(5000);
     const socket = createSocket();
     const call = createCall('MESA');
     call.location = String.Empty;
@@ -340,7 +341,8 @@ describe('displays', function() {
     done();
   });
 
-  it('should fetch direction when a location is provided', function(done) {
+  it('should fetch directions when a location is provided', function(done) {
+    this.timeout(5000);
     const socket = createSocket();
     const call = createCall('MESA');
 
@@ -359,6 +361,7 @@ describe('displays', function() {
   });
 
   it('should not fetch directions if it has already been fetched', function(done) {
+    this.timeout(7000);
     const socket = createSocket();
     const call = createCall('MESA');
 
@@ -380,6 +383,10 @@ describe('displays', function() {
         expect(socket.emit.calledWith('call')).to.be.true;
         expect(socket.emit.calledWith('directions')).to.be.true;
         expect(socket.emit.args[4][1].cached).to.be.true;
+        done();
+      })
+      .catch(function(err) {
+        chai.assert(false, err);
         done();
       });
   });

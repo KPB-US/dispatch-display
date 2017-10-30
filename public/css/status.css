@@ -47,3 +47,7 @@ tbody tr:nth-child(even) {
 thead tr {
   background-color: #f9f9ff;
 }
+
+div.stations > div {
+  margin-bottom: 1em;
+}

@@ -329,6 +329,21 @@
   });
 
   /**
+   * change the page header to show the station id
+   */
+  socket.on('stationid', function(data, ackHandler) {
+    // acknowledge that we received the data
+    if (ackHandler) ackHandler(true);
+
+    console.log(data);
+    document.title = data + ' Dispatch Display';
+
+    // clear the message log since we've connected ok
+    $('.messages').addClass('hidden');
+    $('.messages').empty();
+});
+
+  /**
    * display message from the socket, such as 'remote address unmatched'
    */
   socket.on('message', function(data, ackHandler) {
