@@ -1,13 +1,11 @@
 version: "2"
 services:
-  node:
-    image: "node:6"
-    user: "node"
-    working_dir: /home/node/app
+  app:
+    build: .
     environment:
       - NODE_ENV=production
-    volumes:
-      - ./:/home/node/app
     ports:
       - "3000:3000"
-    command: "npm start"
+    network_mode: "host"
+# docker-compose build
+# docker-compose up
