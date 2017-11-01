@@ -1,11 +1,24 @@
 version: "2"
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     environment:
       - NODE_ENV=production
     ports:
       - "3000:3000"
-    network_mode: "host"
+  web:
+    restart: always
+    build:
+      context: .
+      dockerfile: nginx.Dockerfile
+    ports:
+      - "80:80"
+    # network_mode: "host"
+    links:
+      - "app:app"
+
 # docker-compose build
 # docker-compose up
+# https://github.com/b00giZm/docker-compose-nodejs-examples/tree/master/05-nginx-express-redis-nodemon
