@@ -9,8 +9,7 @@ Displays 911 dispatch details, timer, and map in the station. Cycles through mul
 ## configuration
 
 1. Set the following environment variables.
-- GOOGLE_DIRECTIONS_API_KEY
-- GOOGLE_STATIC_MAPS_API_KEY
+- GAPI_KEY (GOOGLE MAPS JAVASCRIPT and MAPS DIRECTIONS APIS)
 - ROLLBAR_TOKEN
 - DISPLAY_TTL
 - CALL_HISTORY_LIMIT
