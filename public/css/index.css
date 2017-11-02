@@ -7,6 +7,8 @@ body {
   font-family: 'Oswald', sans-serif;
 }
 
+/* index or toc when multiple calls displayed at same time */
+
 .calls-index {
   position:absolute;
   top: 0;
@@ -40,6 +42,7 @@ body {
   line-height: 4vw;
   opacity: .8;
 }
+
 .container {
   transition: left .5s, opacity 1s;
   position: absolute;
@@ -57,14 +60,13 @@ body {
 .container.hidden {
   left: -100vw;
   opacity: 0;
-  /*left: -1000vw;
-  opacity: 0;*/
 }
 .col-left {
   vertical-align: top;
   display: table-cell;
   width: 40%;
   background-color: #fff;
+  border-right: solid 1px #aaa;
 }
 .col-right {
   position: relative;
@@ -73,10 +75,12 @@ body {
   width: 65%;
   background-color: #fff;
 }
+
+/* call history log when no active calls displayed */
+
 .callslog {
   background-color: #010101;
   color: #ddd;
-  /* height: 100vh; */
   font-size: 2vw;
 }
 .working {
@@ -187,12 +191,16 @@ body {
   position: absolute;
   top: 0;
   right: 0;
-  color: #333;
-  background-color: #f0f0ff;
+  color: #000;
+  background-color: #ffffff;
   border-bottom-left-radius: 1em;
-  padding: .25em;
-  opacity: .7;
-  font-size: 1vw;
+  opacity: .8;
+  font-size: 1.5vw;
+}
+.route ol {
+  -webkit-margin-before: .25em;
+  -webkit-margin-after: .25em;
+  padding-right: .25em;
 }
 
 div#time {
@@ -204,6 +212,8 @@ div#time {
   font-family: fixed;
   padding-right: 1vw;
 }
+
+/* connection problem message */
 
 ul.messages {
   font-size: 4vw;
