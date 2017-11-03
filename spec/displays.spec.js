@@ -122,8 +122,8 @@ describe('displays', function() {
     const socket = createSocket();
 
     displays.handleConnection(socket);
-    expect(socket.emit.calledWith('stationid')).to.be.true;
-    expect(socket.emit.args[0][1]).to.equal('MESA');
+    expect(socket.emit.calledWith('config')).to.be.true;
+    expect(socket.emit.args[0][1].station).to.equal('MESA');
   });
 
   it('should track connected displays', function() {
