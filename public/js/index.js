@@ -372,6 +372,9 @@
     if (data.location) {
       $(callEl).find('.location').text(data.location);
     }
+    if (data.commonName) {
+      $(callEl).find('.common-name').text(data.commonName);
+    }
     if (data.venue) {
       $(callEl).find('.venue').text(data.venue);
     }
