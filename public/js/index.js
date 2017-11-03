@@ -8,8 +8,8 @@
   let isRollbarConfigured = false;
 
   const ONLINE_CHECK_URL = 'http://localhost:8000/online_check.html';
-  const CALL_ACTIVE_SECS = 60 * 10; // time the call is active after which it should disappear
-  const SWITCH_AFTER_SECS = 8; // how quickly we should switch between active calls
+  const CALL_ACTIVE_SECS = 60 * 20; // time the call is active after which it should disappear
+  const SWITCH_AFTER_SECS = 10; // how quickly we should switch between active calls
   const LAST_X_TEXT_DIRECTIONS = 6; // how many text directions steps to show
 
   const socket = io();
