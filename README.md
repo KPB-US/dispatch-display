@@ -26,10 +26,12 @@ Displays 911 dispatch details, timer, and map in the station. Cycles through mul
   ccText: '',
 
   station: null,
+  units: null,
   dispatchDateTime: null,
   dispatchCode: '', // severity level
 
   location: null,
+  commonName: null,
   crossStreets: null,
   venue: null,
 }
@@ -43,6 +45,17 @@ Displays 911 dispatch details, timer, and map in the station. Cycles through mul
 1. Set up your nodejs server to run server.js
 2. Set up your RasperryPi's with debian jessie to point chromium at the file location of the online_check.html file.  This file is served by `python -m SimpleHTTPServer -p 8000` from the /home/signage/pi folder.  If the network is not connected then a message will be displayed stating such.  If the network is connected then it will redirect to the dispatch server url.  When the dispatch server display page is idle (not actively showing a call) and the network does down, the browser will be redirected to the locally served online-check.html page also.  Your signage user on the pi could also be set to autostart the pi/signage.sh which starts the local server and launches chromium in kiosk mode.
 3. Get your 911 system (or an intermediary) to post calls to your server at http://server/incoming.
+
+## docker
+This is still a work in progress-- getting the containers and compositions all set up...
+
+## mapping
+
+The origin is the lat/lng of the station.  The destination is the location in the call.  It can be a lat/lng or a text address.  If it is a text address, then the ADDRESS_SUFFIX is appeneded to it.  The origin and destination are used in determining the the directions via the Google Maps Directions API.  If the first leg's distance exceeds 100 miles, then the directions/map are ignored because we assume that google matched a location outside of our service area.
+
+On the client browser, the map is generated dynamically and renders the directions.  If the zoom level at this point is greater than 15, then the zoom level never changes because it displayed a route at a very close level of detail.  If the zoom level is 15 or less, then as the call slide cycles, the first half of the cycle is shown at zoom level 14, and the second half of the cycle is shown at zoom level 15.  Regardless of the zoom levels, the destination is centered in the map.
+
+If the text directions exceed LAST_X_TEXT_DIRECTIONS, then only the LAST_X_TEXT_DIRECTIONS are displayed in the text directions area on the map.
 
 ## development
 
