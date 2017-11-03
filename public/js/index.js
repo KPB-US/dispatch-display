@@ -8,7 +8,7 @@
   let isRollbarConfigured = false;
 
   const ONLINE_CHECK_URL = 'http://localhost:8000/online_check.html';
-  const CALL_ACTIVE_SECS = 60 * 20; // time the call is active after which it should disappear
+  let CALL_ACTIVE_SECS = 60 * 25; // time the call is active after which it should disappear, overriden in config msg below
   const SWITCH_AFTER_SECS = 10; // how quickly we should switch between active calls
   const LAST_X_TEXT_DIRECTIONS = 6; // how many text directions steps to show
 
@@ -410,6 +410,8 @@
 
     console.log(data.station);
     document.title = data.station + ' Dispatch Display';
+
+    CALL_ACTIVE_SECS = data.call_active_secs;
 
     // if we have not already loaded the map api with the key we just received then we should do so now
     if (!isMapApiLoaded) {

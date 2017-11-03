@@ -11,7 +11,7 @@ Displays 911 dispatch details, timer, and map in the station. Cycles through mul
 1. Set the following environment variables.
 - GAPI_KEY (GOOGLE MAPS JAVASCRIPT and MAPS DIRECTIONS APIS)
 - ROLLBAR_TOKEN
-- DISPLAY_TTL
+- CALL_ACTIVE_SECS
 - CALL_HISTORY_LIMIT
 - ADDRESS_SUFFIX (for helping GoogleMaps find the location in your area)
 - LOG_LEVEL
