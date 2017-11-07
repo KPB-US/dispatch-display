@@ -9,9 +9,10 @@
 
   const ONLINE_CHECK_URL = 'http://localhost:8000/online_check.html';
   let CALL_ACTIVE_SECS = 60 * 25; // time the call is active after which it should disappear, overriden in config msg below
-  const SWITCH_AFTER_SECS = 10; // how quickly we should switch between active calls
-  const LAST_X_TEXT_DIRECTIONS = 6; // how many text directions steps to show
-
+  let SWITCH_AFTER_SECS = 10; // how quickly we should switch between active calls
+  let LAST_X_TEXT_DIRECTIONS = 6; // how many text directions steps to show
+  let SKIP_FIRST_DIRECTIONS = 0; // how many text directions to skip from the start
+  
   const socket = io();
   const calls = []; // keep track of currently active calls
 
@@ -179,64 +180,6 @@
   }, 1000);
 
   /**
-   * handle directions, display route and map
-   *
-   * @param {object} data call data
-   * @return {void} none
-   */
-  // function handleDirections(data) {
-  //   const callNumber = data.callNumber;
-  //   const directions = data.response;
-
-
-
-
-
-
-  // const destination = (data.location.match(/[A-Z]/) == null ?
-  //   data.location.split(',').map((s) => Number(s)) : data.location + ADDRESS_SUFFIX);
-  // return googleMapsClient.directions({
-  //   origin: [station.lat, station.lng],
-  //   destination: destination,
-  //   mode: 'driving',
-  // }).asPromise()
-  //   .then((response) => {
-  //     // log('google directions api response', response);
-  //     // if we got something and there is a route
-  //     if (response.json.status === 'OK' && response.json.routes[0].legs[0] &&
-  //       // must be less than 100 miles away or else google found some other matching location
-  //       response.json.routes[0].legs[0].distance.value < 160934) {
-  //       let dispatchCode = data.dispatchCode || 'X';
-  //       const markers = '&markers=color:red|label:' + dispatchCode + '|' +
-  //         response.json.routes[0].legs[0].end_location.lat + ',' +
-  //         response.json.routes[0].legs[0].end_location.lng;
-  //       const enc = encodeURIComponent(response.json.routes[0].overview_polyline.points);
-  //       const directions = {
-  //         callNumber: data.callNumber,
-  //         station: data.station,
-  //         response,
-  //         cached: false,
-  //         args: {
-  //           origin: response.json.routes[0].legs[0].start_location,
-  //           destination: response.json.routes[0].legs[0].end_location,
-  //         },
-  //         // centering on the destination to show the ending route in detail
-  //         mapUrl: STATIC_MAP_BASE_URL + '&path=enc:' + enc + markers + '&center=' + destination,
-  //       };
-  //       sendToStation('directions', directions);
-  //       call.directionsData = directions;
-  //       return call;
-  //     }
-  //   })
-  //   .catch((err) => {
-  //     logger.error(err);
-  //     if (rollbar) {
-  //       rollbar.log(err);
-  //     }
-  //   });
-// }
-
-  /**
    * generate the map
    * @param {element} el the element to place the map
    * @param {call} call data
@@ -323,6 +266,10 @@
               }
               // if there are more than six steps, only show the last half
               let steps = route.legs[0].steps.slice(-LAST_X_TEXT_DIRECTIONS);
+              // if there is less, pop off the first x steps
+              if (route.legs[0].steps.length <= LAST_X_TEXT_DIRECTIONS) {
+                steps.shift();
+              }
               for (let i = 0; i < steps.length; i++) {
                 $(callEl).find('.route ol').append($('<li>')
                   .html(steps[i].instructions +
@@ -474,9 +421,12 @@
     console.log(stationIds);
     document.title = stationIds + ' Dispatch Display';
 
-    CALL_ACTIVE_SECS = data.call_active_secs;
-    ADDRESS_SUFFIX = data.address_suffix;
+    CALL_ACTIVE_SECS = data.callActiveSecs;
+    ADDRESS_SUFFIX = data.addressSuffix;
     STATIONS = data.stations;
+    SWITCH_AFTER_SECS = data.switchAfterSecs;
+    LAST_X_TEXT_DIRECTIONS = data.lastXTextDirections;
+    SKIP_FIRST_DIRECTIONS = data.skipFirstDirections;
 
     // if we have not already loaded the map api with the key we just received then we should do so now
     if (!isMapApiLoaded) {
