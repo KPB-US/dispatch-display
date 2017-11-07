@@ -128,7 +128,7 @@ describe('displays', function() {
 
     displays.handleConnection(socket);
     expect(socket.emit.calledWith('config')).to.be.true;
-    expect(socket.emit.args[0][1].stations[0]).to.equal('MESA1');
+    expect(socket.emit.args[0][1].stations[0].id).to.equal('MESA1');
     expect(socket.emit.args[0][1].areas[0]).to.equal('MESA');
   });
 
