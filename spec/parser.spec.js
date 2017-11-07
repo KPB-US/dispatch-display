@@ -42,6 +42,11 @@ describe('parse', function() {
     expect(data.valid).to.be.false;
   });
 
+  it('should map station to area', function() {
+    const data = parser.parse(sample);
+    expect(data.area).to.equal(sample.station);
+  });
+
   // specific tests
 
   it('should extract letter from dispatchCode', function() {

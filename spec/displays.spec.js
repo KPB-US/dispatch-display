@@ -14,9 +14,13 @@ const displays = require('../lib/displays');
 
 // set up our test stations
 stations.STATIONS.splice(0, stations.STATIONS.length);
-Array.prototype.push.apply(stations.STATIONS, [
-  {id: 'MESA', lat: 59.74515, lng: -151.258885, ip_match_regex: /192\.168\.1\.[0-9]+/},
-  {id: 'NSA', lat: 59.74515, lng: -151.258885, ip_match_regex: /192\.168\.3\.[0-9]+/},
+Array.prototype.push.apply(stations.STATIONS, [ /* eslint no-multi-spaces: off */
+  {id: 'MESA1', area: 'MESA', lat: 59.74515, lng: -151.258885, ip_match_regex: /192\.168\.1\.[0-9]+/},
+  {id: 'TEST1', area: 'MESA', lat: 59.74515, lng: -151.258885, ip_match_regex: /192\.168\.8\.1/},
+  {id: 'MESA2', area: 'MESA', lat: 59.74515, lng: -151.258885, ip_match_regex: /192\.168\.2\.[0-9]+/},
+  {id: 'NSA1',  area: 'NSA',  lat: 59.74515, lng: -151.258885, ip_match_regex: /192\.168\.3\.[0-9]+/},
+  {id: 'TEST2', area: 'NSA',  lat: 59.74515, lng: -151.258885, ip_match_regex: /192\.168\.8\.1/},
+  {id: 'TEST3', area: 'PESA', lat: 59.74515, lng: -151.258885, ip_match_regex: /192\.168\.7\.1/},
 ]);
 
 /**
@@ -59,16 +63,17 @@ function createSocket(ip) {
 }
 
 /**
- * create a sample call object
- * @param {string} station - station id
+ * create a sample incoming data object
+ * @param {string} area - area id
  * @return {call} call data
  */
-function createCall(station) {
+function createIncomingData(area) {
   let call = {
     location: '144 N BINKLEY ST',
     venue: 'SOLDOTNA',
     crossStreets: 'N BINKLY ST / PARK ST',
-    station,
+    station: area,
+    area,
     callNumber: '1010',
     callType: '43-Test1 Test2',
     callDateTime: '09/25/2017 08:44:34',
@@ -123,7 +128,8 @@ describe('displays', function() {
 
     displays.handleConnection(socket);
     expect(socket.emit.calledWith('config')).to.be.true;
-    expect(socket.emit.args[0][1].station).to.equal('MESA');
+    expect(socket.emit.args[0][1].stations[0].id).to.equal('MESA1');
+    expect(socket.emit.args[0][1].areas[0]).to.equal('MESA');
   });
 
   it('should track connected displays', function() {
@@ -142,22 +148,18 @@ describe('displays', function() {
     old.setFullYear(1980);
     displays.callHistory.push({
       callData: {
-        station: 'MESA',
+        area: 'MESA',
         callType: '--expired--',
       },
       receivedDate: old,
-      directionsData: {
-      },
     });
     // add a current call
     displays.callHistory.push({
       callData: {
-        station: 'MESA',
+        area: 'MESA',
         callType: 'Medic/Fire',
       },
       receivedDate: new Date(),
-      directionsData: {
-      },
     });
     displays.handleConnection(socket);
     expect(socket.emit.calledWith('call')).to.be.true;
@@ -222,9 +224,9 @@ describe('displays', function() {
     mesa2.emit.resetHistory();
     nsa1.emit.resetHistory();
     // send a sample call to MESA
-    displays.sendToStation('call', {
+    displays.sendToStations('call', {
       callNumber: 1,
-      station: 'MESA',
+      area: 'MESA',
     });
     expect(mesa1.emit.called).to.be.true;
     expect(mesa2.emit.called).to.be.true;
@@ -233,7 +235,7 @@ describe('displays', function() {
 
   it('should send call logs when requested', function() {
     const socket = createSocket();
-    const call = createCall('MESA');
+    const call = createIncomingData('MESA');
     call.location = String.Empty;
 
     displays.handleConnection(socket);
@@ -248,7 +250,7 @@ describe('displays', function() {
 
   it('should update call when same call comes through again', function() {
     const socket = createSocket();
-    const call = createCall('MESA');
+    const call = createIncomingData('MESA');
     call.location = String.Empty;
     const res = createResponse();
 
@@ -260,7 +262,7 @@ describe('displays', function() {
     displays.handleIncomingData(req, res);
     expect(displays.callHistory.length).to.equal(1);
 
-    const call2 = createCall('MESA');
+    const call2 = createIncomingData('MESA');
     call2.ccText = 'foobar';
     let req2 = {
       body: call2,
@@ -292,7 +294,7 @@ describe('displays', function() {
     displays.handleConnection(socket);
 
     const res = createResponse();
-    const call = createCall('MESA');
+    const call = createIncomingData('MESA');
     call.location = String.Empty;
     let req = {
       body: call,
@@ -310,7 +312,7 @@ describe('displays', function() {
 
   it('should discard calls for unhandled stations', function() {
     const socket = createSocket();
-    const call = createCall('Q*BERT');
+    const call = createIncomingData('Q*BERT');
     call.location = String.Empty;
 
     displays.handleConnection(socket);
@@ -327,7 +329,7 @@ describe('displays', function() {
   it('should not fetch directions when no location is provided', function(done) {
     this.timeout(5000);
     const socket = createSocket();
-    const call = createCall('MESA');
+    const call = createIncomingData('MESA');
     call.location = String.Empty;
 
     displays.handleConnection(socket);
@@ -341,53 +343,26 @@ describe('displays', function() {
     done();
   });
 
-  it('should fetch directions when a location is provided', function(done) {
-    this.timeout(5000);
-    const socket = createSocket();
-    const call = createCall('MESA');
-
+  it('should receive calls for all stations the display is registered for', function() {
+    const socket = createSocket('192.168.8.1');
     displays.handleConnection(socket);
-    let req = {
-      body: call,
-    };
-    let res = createResponse();
-    displays.handleIncomingData(req, res)
-      .then(function() {
-        expect(socket.emit.calledWith('call')).to.be.true;
-        expect(socket.emit.calledWith('directions')).to.be.true;
-        expect(socket.emit.args[2][1].cached).to.be.false;
-        done();
-      });
-  });
 
-  it('should not fetch directions if it has already been fetched', function(done) {
-    this.timeout(7000);
-    const socket = createSocket();
-    const call = createCall('MESA');
+    // clear emit stub history
+    socket.emit.resetHistory();
 
-    displays.handleConnection(socket);
-    let req = {
-      body: call,
-    };
-    let res = createResponse();
-    displays.handleIncomingData(req, res)
-      .then(function() {
-        const call2 = createCall('MESA');
-        let req2 = {
-          body: call2,
-        };
-        let res2 = createResponse();
-        return displays.handleIncomingData(req2, res2);
-      })
-      .then(function() {
-        expect(socket.emit.calledWith('call')).to.be.true;
-        expect(socket.emit.calledWith('directions')).to.be.true;
-        expect(socket.emit.args[4][1].cached).to.be.true;
-        done();
-      })
-      .catch(function(err) {
-        chai.assert(false, err);
-        done();
-      });
+    // send a sample call to MESA and NSA
+    displays.sendToStations('call', {
+      callNumber: 1,
+      area: 'MESA',
+    });
+    displays.sendToStations('call', {
+      callNumber: 2,
+      area: 'NSA',
+    });
+    displays.sendToStations('call', {
+      callNumber: 3,
+      area: 'PESA',
+    });
+    expect(socket.emit.callCount).to.equal(2);
   });
 });

@@ -1,5 +1,5 @@
 /* eslint-env browser, jquery */
-/* globals moment, io */
+/* globals google, moment, io */
 
 (function() {
   'use strict';
@@ -15,7 +15,10 @@
   const socket = io();
   const calls = []; // keep track of currently active calls
 
-/**
+  let STATIONS = []; // stations this display is associated with
+  let ADDRESS_SUFFIX = ''; // address suffix for resolving addresses
+
+  /**
  * update the .calls-index element with which page (call) we are displaying
  *
  * @param {string} x call index
@@ -75,7 +78,7 @@
       const callEl = document.querySelector("[data-call-number='" +
         urgentCall.data.callNumber + "']"); /* eslint quotes:off */
       $(callEl).removeClass('hidden').addClass('shown');
-      if (!urgentCall.mapDisplayed && urgentCall.mapUrl) {
+      if (!urgentCall.mapDisplayed) {
         displayMap(urgentCall);
       }
       updateCallIndex(calls.indexOf(urgentCall) + 1, calls.length);
@@ -109,7 +112,7 @@
       }
     } else {
       // display the map if we haven't yet
-      if (!currentCall.mapDisplayed && currentCall.mapUrl) {
+      if (!currentCall.mapDisplayed) {
         displayMap(currentCall);
       }
 
@@ -178,57 +181,60 @@
   /**
    * handle directions, display route and map
    *
-   * data from websocket from server:
-   * @param {string} callNumber id of call from 911 system
-   * @param {object} response google directions api results
-   * @param {string} mapUrl google static map url with route highlighted
+   * @param {object} data call data
+   * @return {void} none
    */
-  socket.on('directions', function(data, ackHandler) {
-    if (ackHandler) ackHandler(true);
+  // function handleDirections(data) {
+  //   const callNumber = data.callNumber;
+  //   const directions = data.response;
 
-    const callNumber = data.callNumber;
-    const directions = data.response;
-    const mapUrl = data.mapUrl + '&size=';
 
-    // find the dom element for the call we are on
-    let callEl = document.querySelector("[data-call-number='" + callNumber + "']"); /* eslint quotes:off */
-    if (callEl == null) {
-      // directions are for a different call that we no longer or never have shown
-      console.log('directions came in for ', callNumber, ' but that call is not active');
-      return;
-    }
 
-    // display estimated travel time
-    let route = (directions.json.routes.length > 0 ? directions.json.routes[0] : null);
-    if (route && route.legs.length > 0 && route.legs[0].steps.length > 0) {
-      $(callEl).find('.travel-time').text('estimated travel time is ' + route.legs[0].duration.text);
-    }
 
-    // display route travel directions
-    if ($(callEl).find('.route ol').length != 0) {
-      // clear them if they already have something
-      $(callEl).find('.route').empty();
-      $(callEl).find('.route').append($('<ol>'));
-    }
-    // if there are more than six steps, only show the last half
-    let steps = route.legs[0].steps.slice(-LAST_X_TEXT_DIRECTIONS);
-    for (let i = 0; i < steps.length; i++) {
-      $(callEl).find('.route ol').append($('<li>')
-        .html(steps[i].html_instructions +
-           ' (' + steps[i].distance.text + ')'));
-    }
 
-    // Since we have to size the map to the container and have the browser fetch it
-    // queue it up to happen when the call is visible
-    let call = calls.find((entry) => entry.data.callNumber == callNumber);
-    if (call != undefined) {
-      call.mapUrl = mapUrl;
-      call.mapDisplayed = false;
-      call.args = data.args; // store the args so we can map it
-    } else {
-      console.log('call is not defined so we cannot store the mapUrl');
-    }
-  });
+
+  // const destination = (data.location.match(/[A-Z]/) == null ?
+  //   data.location.split(',').map((s) => Number(s)) : data.location + ADDRESS_SUFFIX);
+  // return googleMapsClient.directions({
+  //   origin: [station.lat, station.lng],
+  //   destination: destination,
+  //   mode: 'driving',
+  // }).asPromise()
+  //   .then((response) => {
+  //     // log('google directions api response', response);
+  //     // if we got something and there is a route
+  //     if (response.json.status === 'OK' && response.json.routes[0].legs[0] &&
+  //       // must be less than 100 miles away or else google found some other matching location
+  //       response.json.routes[0].legs[0].distance.value < 160934) {
+  //       let dispatchCode = data.dispatchCode || 'X';
+  //       const markers = '&markers=color:red|label:' + dispatchCode + '|' +
+  //         response.json.routes[0].legs[0].end_location.lat + ',' +
+  //         response.json.routes[0].legs[0].end_location.lng;
+  //       const enc = encodeURIComponent(response.json.routes[0].overview_polyline.points);
+  //       const directions = {
+  //         callNumber: data.callNumber,
+  //         station: data.station,
+  //         response,
+  //         cached: false,
+  //         args: {
+  //           origin: response.json.routes[0].legs[0].start_location,
+  //           destination: response.json.routes[0].legs[0].end_location,
+  //         },
+  //         // centering on the destination to show the ending route in detail
+  //         mapUrl: STATIC_MAP_BASE_URL + '&path=enc:' + enc + markers + '&center=' + destination,
+  //       };
+  //       sendToStation('directions', directions);
+  //       call.directionsData = directions;
+  //       return call;
+  //     }
+  //   })
+  //   .catch((err) => {
+  //     logger.error(err);
+  //     if (rollbar) {
+  //       rollbar.log(err);
+  //     }
+  //   });
+// }
 
   /**
    * generate the map
@@ -236,44 +242,97 @@
    * @param {call} call data
    */
   function initMap(el, call) {
-    let origin = call.args.origin;
-    let destination = call.args.destination;
+    // geocode the destination
+    let gr = null;
+    if (call.data.location.match(/[A-Z]/) == null) {
+      gr = {location: call.data.location.split(',').map((s) => Number(s))};
+    } else {
+      gr = {address: call.data.location + ADDRESS_SUFFIX};
+    }
 
-    let map = new google.maps.Map(el, {
-      center: destination,
-      zoom: 14,
-    });
-
-    call.map = map;
-
-    let marker = new google.maps.Marker({
-      position: destination,
-      map: map,
-      label: call.data.dispatchCode,
-    });
-
-    let directionsDisplay = new google.maps.DirectionsRenderer({
-      map,
-      // preserveViewport: true,  // prevents reZooming
-      markerOptions: {
-        label: call.data.dispatchCode,
-      },
-      suppressMarkers: true,
-    });
-
-    // Set destination, origin and travel mode.
-    let request = {
-      destination: destination,
-      origin: origin,
-      travelMode: 'DRIVING',
-    };
-
-    // Pass the directions request to the directions service.
-    let directionsService = new google.maps.DirectionsService();
-    directionsService.route(request, function(response, status) {
+    let g = new google.maps.Geocoder();
+    g.geocode(gr, function(results, status) {
       if (status == 'OK') {
-        // Display the route on the map.
-        directionsDisplay.setDirections(response);
+        if (results.length > 0) {
+          let destination = results[0].geometry.location;
+          call.args = {destination};
+
+          let origin = STATIONS.find((e) => e.area == call.data.area);
+          if (!origin) {
+            // cannot determine origin (location of station) for mapping
+            console.log('directions came in for ', call.data.area, ' but we cannot find our local station');
+            return;
+          }
+      
+          let map = new google.maps.Map(el, {
+            center: destination,
+            zoom: 14,
+          });
+      
+          call.map = map;
+      
+          let marker = new google.maps.Marker({
+            position: destination,
+            map: map,
+            label: call.data.dispatchCode,
+          });
+      
+          let directionsDisplay = new google.maps.DirectionsRenderer({
+            map,
+            // preserveViewport: true,  // prevents reZooming
+            markerOptions: {
+              label: call.data.dispatchCode,
+            },
+            suppressMarkers: true,
+          });
+      
+          // Set destination, origin and travel mode.
+          let request = {
+            destination: destination,
+            origin: {lat: origin.lat, lng: origin.lng},
+            travelMode: 'DRIVING',
+          };
+      
+          // Pass the directions request to the directions service.
+          let directionsService = new google.maps.DirectionsService();
+          directionsService.route(request, function(response, status) {
+            if (status == 'OK') {
+              // Display the route on the map.
+              call.directions = response;
+              directionsDisplay.setDirections(response);
+      
+              // find the dom element for the call we are on
+              let callEl = document.querySelector("[data-call-number='" + call.data.callNumber + "']"); /* eslint quotes:off */
+              if (callEl == null) {
+                // directions are for a different call that we no longer or never have shown
+                console.log('directions came in for ', call.data.callNumber, ' but that call is not active');
+                return;
+              }
+      
+              // display estimated travel time
+              let route = (response.routes.length > 0 ? response.routes[0] : null);
+              if (route && route.legs.length > 0 && route.legs[0].steps.length > 0) {
+                $(callEl).find('.travel-time').text('estimated travel time is ' + route.legs[0].duration.text);
+              }
+      
+              // display route travel directions
+              if ($(callEl).find('.route ol').length != 0) {
+                // clear them if they already have something
+                $(callEl).find('.route').empty();
+                $(callEl).find('.route').append($('<ol>'));
+              }
+              // if there are more than six steps, only show the last half
+              let steps = route.legs[0].steps.slice(-LAST_X_TEXT_DIRECTIONS);
+              for (let i = 0; i < steps.length; i++) {
+                $(callEl).find('.route ol').append($('<li>')
+                  .html(steps[i].instructions +
+                    ' (' + steps[i].distance.text + ')'));
+              }
+            } else {
+              console.log('directionsService.route status is ' + status);
+            }
+          });
+        }
       }
     });
   }
@@ -411,10 +470,13 @@
     // acknowledge that we received the data
     if (ackHandler) ackHandler(true);
 
-    console.log(data.station);
-    document.title = data.station + ' Dispatch Display';
+    let stationIds = data.stations.map((e) => e.id).join(', ');
+    console.log(stationIds);
+    document.title = stationIds + ' Dispatch Display';
 
     CALL_ACTIVE_SECS = data.call_active_secs;
+    ADDRESS_SUFFIX = data.address_suffix;
+    STATIONS = data.stations;
 
     // if we have not already loaded the map api with the key we just received then we should do so now
     if (!isMapApiLoaded) {
