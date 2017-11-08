@@ -10,13 +10,6 @@ const v = new Vue({
     },
   },
   methods: {
-    directionsStatus(call) {
-      let status = '';
-      if (call && call.directionsData && call.directionsData.response && call.directionsData.response.json) {
-        status = call.directionsData.response.json.status;
-      }
-      return status;
-    },
     updateStatus: function() {
       fetch('/status')
       .then((results) => results.json())
