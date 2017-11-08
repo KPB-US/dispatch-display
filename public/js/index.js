@@ -12,7 +12,7 @@
   let SWITCH_AFTER_SECS = 10; // how quickly we should switch between active calls
   let LAST_X_TEXT_DIRECTIONS = 6; // how many text directions steps to show
   let SKIP_FIRST_DIRECTIONS = 0; // how many text directions to skip from the start
-  
+
   const socket = io();
   const calls = []; // keep track of currently active calls
 
@@ -206,20 +206,20 @@
             console.log('directions came in for ', call.data.area, ' but we cannot find our local station');
             return;
           }
-      
+
           let map = new google.maps.Map(el, {
             center: destination,
             zoom: 14,
           });
-      
+
           call.map = map;
-      
+
           let marker = new google.maps.Marker({
             position: destination,
             map: map,
             label: call.data.dispatchCode,
           });
-      
+
           let directionsDisplay = new google.maps.DirectionsRenderer({
             map,
             // preserveViewport: true,  // prevents reZooming
@@ -228,14 +228,14 @@
             },
             suppressMarkers: true,
           });
-      
+
           // Set destination, origin and travel mode.
           let request = {
             destination: destination,
             origin: {lat: origin.lat, lng: origin.lng},
             travelMode: 'DRIVING',
           };
-      
+
           // Pass the directions request to the directions service.
           let directionsService = new google.maps.DirectionsService();
           directionsService.route(request, function(response, status) {
@@ -243,7 +243,7 @@
               // Display the route on the map.
               call.directions = response;
               directionsDisplay.setDirections(response);
-      
+
               // find the dom element for the call we are on
               let callEl = document.querySelector("[data-call-number='" + call.data.callNumber + "']"); /* eslint quotes:off */
               if (callEl == null) {
@@ -251,13 +251,13 @@
                 console.log('directions came in for ', call.data.callNumber, ' but that call is not active');
                 return;
               }
-      
+
               // display estimated travel time
               let route = (response.routes.length > 0 ? response.routes[0] : null);
               if (route && route.legs.length > 0 && route.legs[0].steps.length > 0) {
                 $(callEl).find('.travel-time').text('estimated travel time is ' + route.legs[0].duration.text);
               }
-      
+
               // display route travel directions
               if ($(callEl).find('.route ol').length != 0) {
                 // clear them if they already have something
