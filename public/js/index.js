@@ -6,6 +6,7 @@
 
   let isMapApiLoaded = false;
   let isRollbarConfigured = false;
+  let areas = null; // areas module passed from server
 
   const ONLINE_CHECK_URL = 'http://localhost:8000/online_check.html';
   let CALL_ACTIVE_SECS = 60 * 25; // time the call is active after which it should disappear, overriden in config msg below
@@ -131,6 +132,7 @@
           // reset the zoom
           if (currentCall.map && currentCall.map.getZoom() < 16) {
             currentCall.map.setZoom(14);
+            currentCall.map.setCenter(currentCall.args.destination);
           }
           // reset the timer
           currentCall.visibleAt = moment();
@@ -143,8 +145,8 @@
           if (currentCall.map) {
             if (currentCall.map.getZoom() < 16) {
               currentCall.map.setZoom(15);
+              currentCall.map.setCenter(currentCall.args.destination);
             }
-            currentCall.map.setCenter(currentCall.args.destination);
           }
         }
       }
@@ -191,6 +193,14 @@
       gr = {location: call.data.location.split(',').map((s) => Number(s))};
     } else {
       gr = {address: call.data.location + ADDRESS_SUFFIX};
+    }
+    // prefer geocodes within the areas boundary if we have it
+    const areas = new Areas();
+    if (areas) {
+      let bounds = areas.bounds(call.data.area);
+      if (bounds) {
+        gr.bounds = new google.maps.LatLngBounds(bounds.sw, bounds.ne);
+      }
     }
 
     let g = new google.maps.Geocoder();
