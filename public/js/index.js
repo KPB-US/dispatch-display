@@ -422,7 +422,7 @@
     let html = '<div id="time"></div>';
     if (data.calls.length > 0) {
       const rows = data.calls.map((entry) => `<tr>
-        <td>${moment(entry.callData.callDateTime, 'MM/DD/YYYY hh:mm:ss').format('M/D ddd h:ma')}</td>
+        <td>${moment(entry.callData.callDateTime, 'MM/DD/YYYY hh:mm:ss').format('M/D ddd h:mma')}</td>
         <td>${entry.callData.area}</td>
         <td>${entry.callData.callType}</td>
         <td>${entry.callData.dispatchCode}</td>
